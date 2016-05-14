@@ -1,3 +1,7 @@
+import configparser as cfg
+import os
+
+
 class PatchBase:
     def __init__(self, author=None, date=None, num=None, ticket_num=None, objects_new=None, objects_mod=None,
                  objects_del=None, comment=None, files_list=None):
@@ -20,6 +24,7 @@ class Patch(PatchBase):
     def save(self, path_to_file):
         # записываем содержимое патча в template.sql
         print('save template')
+
     def make_patch(self, path_to_file):
         # скармилваем template.sql в Prepare.py
         print('prepare.py started')
@@ -31,15 +36,25 @@ class RepoJob:
         self.objects_new = objects_new
         self.objects_mod = objects_mod
         self.objects_del = objects_del
+
     def get_status(self):
         # получим статус репозитория
         print('take status of repo')
 
 
 class CfgInfo:
-    def __init__(self, path, author):
+    author = None
+    path = None
+
+    def __init__(self, path=None, author=None):
         self.path = path
         self.author = author
+
     def init(self):
+        dir = os.path.dirname(__file__)
+        config = cfg.ConfigParser()
+        config.read(os.path.join(dir, "cfg/config.ini"))
+        self.author = config.get("info", "author")
         # Получим параметры работы системы
-        print('take params')
+        self.path = config
+        print('take params :', self.path.get("info", "author"))
