@@ -21,6 +21,8 @@ def create_parser():
     parent_group = parser.add_argument_group(title="Параметры")
     parent_group.add_argument("-p", "--project", required=True, help="Проект")
     parent_group.add_argument("-c", "--commit", action='store_true', default=False, help="Флаг коммита после сборки")
+    parent_group.add_argument("-d", "--docs", action='store_true', default=False,
+                              help="Флаг генерации сопровождающих документов")
     parent_group.add_argument("-t", "--text", default="Empty comment line", help="Текст комментария к коммиту")
     parent_group.add_argument("--help", "-h", action="help", help="Справка")
     parent_group.add_argument("--version",
@@ -48,6 +50,7 @@ def main():
         print(inst)
         exit(0)
 
+    print(namespace)
     # получим статусы объектов в репо
     topl = ac.RepoJob(path_dir=path_dir)
     objects_new, objects_mod, objects_del = topl.parse_status(topl.get_status())
@@ -70,7 +73,22 @@ def main():
 
     # запишем template.sql для патча
     fin_p.prepare(proj_name=namespace.project)
-    fin_p.save(path_to_file="template.sql")
+    fin_p.save(path_to_file=os.path.join(path_dir, "patch-template/template.sql"))
+
+    # соберем патч
+    b_sucs_making = True  # fin_p.make_patch(path_to_file=os.path.join(path_dir, "patch-template/patch.bat"))
+    if b_sucs_making is True:
+        print("Success")
+    else:
+        print("Fail")
+
+    # если нужно, отправим коммит
+    if namespace.commit is True:
+        topl.send_commit(comment_line=fin_p.comment)
+
+    # если нужно, соберем сопровождающие документы
+    if namespace.docs is True:
+        print("Create docs")
 
 
 if __name__ == "__main__":

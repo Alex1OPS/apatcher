@@ -49,13 +49,21 @@ class Patch(PatchBase):
         self.full = self.full.replace("__project__", self.name)
 
     def save(self, path_to_file):
-        with open(os.path.join(os.path.dirname(__file__), path_to_file), 'w') as fl:
+        with open(path_to_file, 'w') as fl:
             fl.write(self.full)
 
-
     def make_patch(self, path_to_file):
-        # скармилваем template.sql в Prepare.py
-        print('prepare.py started')
+        cmd = path_to_file
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+        out, err = p.communicate()
+        result = out.decode("utf-8")
+        result = result.split("\n")
+        stat_msg = result[-3]
+        #result = "\n".join(result)
+        if stat_msg == "DONE":
+            return True
+        else:
+            return  False
 
 
 class RepoJob:
@@ -88,6 +96,16 @@ class RepoJob:
             elif ptr[:1] == 'D':
                 obj_del.append(ptr[1:].lstrip())
         return obj_new, obj_mod, obj_del
+
+    # отправка коммита
+    def send_commit(self, comment_line):
+        cmd = "svn commit " + self.path_dir + " -m \"" + comment_line + " \""
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+        out, err = p.communicate()
+        result = out.decode("utf-8")
+        result = result.split("\n")
+        result = "\n".join(result)
+        return result
 
 
 class CfgInfo:
