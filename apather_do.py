@@ -5,7 +5,7 @@ import configparser
 import os
 import string
 
-version = "0.2b"
+version = "0.3b"
 
 
 # Не будем городить класс для парсера, т.к. argparse создает его внутри методов.
@@ -21,6 +21,7 @@ def create_parser():
     parent_group = parser.add_argument_group(title="Параметры")
     parent_group.add_argument("-p", "--project", required=True, help="Проект")
     parent_group.add_argument("-c", "--commit", action='store_true', default=False, help="Флаг коммита после сборки")
+    parent_group.add_argument("-n", "--nomake", action='store_true', default=False, help="Флаг сборки патча")
     parent_group.add_argument("-d", "--docs", action='store_true', default=False,
                               help="Флаг генерации сопровождающих документов")
     parent_group.add_argument("-t", "--text", default="Empty comment line", help="Текст комментария к коммиту")
@@ -76,11 +77,14 @@ def main():
     fin_p.save(path_to_file=os.path.join(path_dir, "patch-template/template.sql"))
 
     # соберем патч
-    b_sucs_making = True  # fin_p.make_patch(path_to_file=os.path.join(path_dir, "patch-template/patch.bat"))
-    if b_sucs_making is True:
-        print("Success")
+    if namespace.nomake is True:
+        print("Without making patch -> True")
     else:
-        print("Fail")
+        b_sucs_making = fin_p.make_patch(path_to_file=os.path.join(path_dir, "patch-template/patch.bat"))
+        if b_sucs_making is True:
+            print("Making patch -> Success")
+        else:
+            print("Making patch -> Fail")
 
     # если нужно, отправим коммит
     if namespace.commit is True:
