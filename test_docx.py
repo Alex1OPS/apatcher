@@ -5,11 +5,12 @@ from docx.shared import Pt
 from docx.shared import Inches
 from docx.shared import Cm
 from docx.enum.table import WD_TABLE_ALIGNMENT
-from datetime import datetime
-from datetime import date
 
 
-def generate_doc_upd_log(author_name="Default", dir_name="\\0000-00-00_00\\", date_d="01 января 2000 года", list_patch=["1", "2"]):
+# Функция генерации update_log.docx
+def generate_doc_upd_log(author_name="Default", dir_name="\\0000-00-00_00\\", date_d="01 января 2000 года",
+                         list_patch=["1", "2"]):
+    dir_name = "\\" + dir_name + "\\"
     # переменные текста
     p_1_pr_str = "Устанавливаются обновления, полученные " + date_d + " от сотрудника отдела внедрения ООО \"ПОТОК\" "
     p_1_pr_str_1 = author_name + " в виде архива(директории) " + dir_name + "."
@@ -129,7 +130,7 @@ def generate_doc_upd_log(author_name="Default", dir_name="\\0000-00-00_00\\", da
 
     # 7 блок
     p_7_0 = document.add_paragraph()
-    r_7_0 =p_7_0.add_run()
+    r_7_0 = p_7_0.add_run()
     r_7_0.add_break()
     p_7 = document.add_paragraph()
     p_7.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -166,14 +167,15 @@ def generate_doc_upd_log(author_name="Default", dir_name="\\0000-00-00_00\\", da
     for section in sections:
         section.top_margin = Cm(margin + 0.5)
         section.bottom_margin = Cm(margin + 0.5)
-        section.left_margin = Cm(2*margin)
+        section.left_margin = Cm(2 * margin)
         section.right_margin = Cm(margin)
 
-    document.save('tmp//demo.docx')
+    document.save('tmp//update_log.docx')
 
 
 def main():
     generate_doc_upd_log("Богомолова А.В", "\\2016-01-01_05\\", "16 мая 2016 года", list_patch=["1.txt", "2.txt"])
+
 
 if __name__ == "__main__":
     main()

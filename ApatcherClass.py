@@ -20,7 +20,8 @@ class PatchBase:
 class PatchTemplate(PatchBase):
     def __init__(self, author=None, date=None, num=None, ticket_num=None, objects_new=None, objects_mod=None,
                  objects_del=None, comment=None, files_list=None, full=None):
-        PatchBase.__init__(self,author,date,num,ticket_num,objects_new,objects_mod,objects_del,comment,files_list)
+        PatchBase.__init__(self, author, date, num, ticket_num, objects_new, objects_mod, objects_del, comment,
+                           files_list)
         self.full = full
 
     def take_from(self, path_to_file="cfg/_temp.sql"):
@@ -59,11 +60,11 @@ class Patch(PatchBase):
         result = out.decode("utf-8")
         result = result.split("\n")
         stat_msg = result[-3]
-        #result = "\n".join(result)
+        # result = "\n".join(result)
         if stat_msg == "DONE":
             return True
         else:
-            return  False
+            return False
 
 
 class RepoJob:
@@ -91,7 +92,7 @@ class RepoJob:
         for ptr in status_mass:
             if ptr[:1] == 'M':
                 obj_mod.append(ptr[1:].lstrip())
-            elif ptr[:1] == 'N':
+            elif ptr[:1] == 'N' or ptr[:1] == 'A' or ptr[:1] == '?':
                 obj_new.append(ptr[1:].lstrip())
             elif ptr[:1] == 'D':
                 obj_del.append(ptr[1:].lstrip())

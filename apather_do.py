@@ -3,9 +3,13 @@ import sys
 import argparse
 import configparser
 import os
-import string
+import test_docx as tdd
+import locale
+import datetime
+import pymorphy2
+import ApatcherMenu
 
-version = "0.3b"
+version = "0.4b"
 
 
 # Не будем городить класс для парсера, т.к. argparse создает его внутри методов.
@@ -24,8 +28,10 @@ def create_parser():
     parent_group.add_argument("-n", "--nomake", action='store_true', default=False, help="Флаг сборки патча")
     parent_group.add_argument("-d", "--docs", action='store_true', default=False,
                               help="Флаг генерации сопровождающих документов")
+    parent_group.add_argument("-r", "--dir", default="", help="Папка, в которой будет передан патч")
     parent_group.add_argument("-t", "--text", default="Empty comment line", help="Текст комментария к коммиту")
-    parent_group.add_argument("--help", "-h", action="help", help="Справка")
+    parent_group.add_argument("-e", "--edit", action='store_true', default=False, help="Флаг редактирования списка файлов")
+    parent_group.add_argument("-h", "--help", action="help", help="Справка")
     parent_group.add_argument("--version",
                               action="version",
                               help="Номер версии",
@@ -34,6 +40,16 @@ def create_parser():
 
 
 def main():
+    # настроим локаль
+    locale.setlocale(locale.LC_ALL, "ru")
+
+    # настроим морфологический анализатор
+    morph = pymorphy2.MorphAnalyzer()
+    # текущая дата в виде строки
+    dt_make = datetime.date.today()
+    # получим месяц в родительном падеже
+    dt_str_make = dt_make.strftime(u"%d " + morph.parse(dt_make.strftime(u"%B"))[0].inflect({'gent'}).word + " %Y")
+
     # получим аргументы командной строки
     parser = create_parser()
     namespace = parser.parse_args(sys.argv[1:])
@@ -51,7 +67,7 @@ def main():
         print(inst)
         exit(0)
 
-    print(namespace)
+    # print(namespace)
     # получим статусы объектов в репо
     topl = ac.RepoJob(path_dir=path_dir)
     objects_new, objects_mod, objects_del = topl.parse_status(topl.get_status())
@@ -88,11 +104,26 @@ def main():
 
     # если нужно, отправим коммит
     if namespace.commit is True:
+        print("Commit changes -> True")
         topl.send_commit(comment_line=fin_p.comment)
 
     # если нужно, соберем сопровождающие документы
     if namespace.docs is True:
-        print("Create docs")
+        print("Create docs -> True")
+        # получим статус репо - ожидаем там увидеть патч
+        ts_rp_patch = ac.RepoJob(path_dir=path_dir + "\\patches")
+        objects_new_p, objects_mod_p, objects_del_p = ts_rp_patch.parse_status(ts_rp_patch.get_status())
+        list_files = [] + objects_new_p + objects_mod_p + objects_del_p
+        list_files = [p.rsplit("\\", 1)[-1] for p in list_files]
+        if namespace.edit is True:
+            choice_ur = 0
+            while choice_ur != 3:
+                ApatcherMenu.print_list(list_files, name="patches")
+                choice_ur = ApatcherMenu.show_menu()
+                print(choice_ur)
+                # list_files = ApatcherMenu.edit_list(lmass=list_files,action=choice_ur)
+        tdd.generate_doc_upd_log(author_name=fin_p.author, dir_name=namespace.dir, date_d=dt_str_make,
+                                 list_patch=list_files)
 
 
 if __name__ == "__main__":
