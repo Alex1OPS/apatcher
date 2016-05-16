@@ -9,27 +9,69 @@ def show_menu():
         print("Error in menu item")
         exit(0)
 
+    if choice == "4":
+        print("Exit -> True")
+        exit(0)
+
     return int(choice)
 
 
 def print_list(lmass, name=""):
-    print("\nEditing list of " + name)
+    print("\nEditing list of " + name + ": ")
     for i in range(0, len(lmass)):
         print(str(i) + ". " + lmass[i])
 
 
 def edit_list(lmass=[], action=0):
-    new_filename = ""
-    del_num = -1
     if action == 1:
         # получим новый файл
-        input("Enter file name: ", new_filename)
+        new_filename = input("Enter file name: ")
         lmass.append(new_filename)
         return lmass
     elif action == 2:
-        input("Enter file number in list: ", del_num)
-        del lmass[del_num]
+        del_num = input("Enter file number in list: ")
+        del lmass[int(del_num)]
         return lmass
     else:
         return lmass
+
+
+def edit_files_list(new_lm=[], mod_lm=[], del_lm=[]):
+    # новые файлы
+    choice = 0
+    while choice != 3:
+        lmass = new_lm
+        print_list(lmass, name="new files")
+        choice = show_menu()
+        new_lm = edit_list(lmass,choice)
+
+    # измененные файлы
+    choice = 0
+    while choice != 3:
+        lmass = mod_lm
+        print_list(lmass, name="modify files")
+        choice = show_menu()
+        mod_lm = edit_list(lmass,choice)
+
+    # удаленные файлы
+    choice = 0
+    while choice != 3:
+        lmass = del_lm
+        print_list(lmass, name="delete files")
+        choice = show_menu()
+        del_lm = edit_list(lmass,choice)
+
+    return new_lm, mod_lm, del_lm
+
+
+
+
+def main():
+    p = ["m1", "m2", "m3"]
+    p = edit_list(p, 1)
+    print(p)
+
+
+if __name__ == "__main__":
+    main()
 

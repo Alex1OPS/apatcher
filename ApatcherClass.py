@@ -60,8 +60,8 @@ class Patch(PatchBase):
         result = out.decode("utf-8")
         result = result.split("\n")
         stat_msg = result[-3]
-        # result = "\n".join(result)
-        if stat_msg == "DONE":
+
+        if "DONE" in stat_msg:
             return True
         else:
             return False
@@ -85,14 +85,23 @@ class RepoJob:
         return result
 
     # парсинг статуса репо вМс1 в 3 массива новых, изменнных, удаленных объектов
-    def parse_status(self, status_mass):
+    def parse_status(self, status_mass, b_patch=False):
         obj_new = []
         obj_mod = []
         obj_del = []
+        # разберем статусы файла, полученные из svn status
         for ptr in status_mass:
+            try:
+                p_fmt = ptr.split(".", 1)[1]
+            except IndexError:
+                p_fmt = ""
+            if ("patches" in ptr or "template.sql" in ptr) and b_patch is not True:
+                continue
+            if p_fmt not in ("sql", "pck", "xml"):
+                continue
             if ptr[:1] == 'M':
                 obj_mod.append(ptr[1:].lstrip())
-            elif ptr[:1] == 'N' or ptr[:1] == 'A' or ptr[:1] == '?':
+            elif ptr[:1] == 'N' or ptr[:1] == 'A':
                 obj_new.append(ptr[1:].lstrip())
             elif ptr[:1] == 'D':
                 obj_del.append(ptr[1:].lstrip())
@@ -123,3 +132,10 @@ class CfgInfo:
         config.read(os.path.join(dir, "cfg/config.ini"))
         self.author = config.get("info", "author")
         self.path = config
+
+
+class PatchPrint:
+    def __init__(self, name="", list_files=[], description=""):
+        self.name = name
+        self.list_files = list_files
+        self.description = description
