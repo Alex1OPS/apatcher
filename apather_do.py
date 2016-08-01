@@ -1,13 +1,15 @@
-import ApatcherClass as ac
-import sys
 import argparse
 import configparser
-import os
-import test_docx as tdd
-import locale
 import datetime
+import locale
+import os
+import sys
+
 from pymorphy2 import MorphAnalyzer
+
+import ApatcherClass as ac
 import ApatcherMenu
+import test_docx as tdd
 
 version = "0.4b"
 
@@ -31,7 +33,7 @@ def create_parser():
     parent_group.add_argument("-o", "--only", action='store_true', default=False,
                               help="Только генерация сопровождающих документов")
     parent_group.add_argument("-y", "--directory", help="Алиас пути для поиска патчей")
-    parent_group.add_argument("-n", "--nums", help="Номера патчей для добавления документации")
+    parent_group.add_argument("-a", "--anum", help="Номера патчей для добавления документации")
     parent_group.add_argument("-r", "--dir", default="", help="Папка, в которой будет передан патч")
     parent_group.add_argument("-t", "--text", default="Empty comment line", help="Текст комментария к коммиту")
     parent_group.add_argument("-e", "--edit", action='store_true', default=False,
@@ -123,7 +125,8 @@ def main():
             print("Create docs -> True")
             # получим статус репо - ожидаем там увидеть патч
             ts_rp_patch = ac.RepoJob(path_dir=path_dir + "\\patches")
-            objects_new_p, objects_mod_p, objects_del_p = ts_rp_patch.parse_status(ts_rp_patch.get_status(), b_patch=True)
+            objects_new_p, objects_mod_p, objects_del_p = ts_rp_patch.parse_status(ts_rp_patch.get_status(),
+                                                                                   b_patch=True)
             list_files = [] + objects_new_p + objects_mod_p + objects_del_p
             list_files = [p.rsplit("\\", 1)[-1] for p in list_files]
             if namespace.edit is True:
@@ -138,11 +141,18 @@ def main():
             pr_list_files = [p.rsplit("\\", 1)[-1] for p in objects_new + objects_mod]
             tdd.generate_doc_upd_log(author_name=pr_author_str, dir_name=namespace.dir, date_d=dt_str_make,
                                      list_patch=list_files)
-            pr_patch = ac.PatchPrint(name=list_files[0].split("_", 1)[-1],list_files=pr_list_files,description=namespace.text)
+            pr_patch = ac.PatchPrint(name=list_files[0].split("_", 1)[-1], list_files=pr_list_files,
+                                     description=namespace.text)
             tdd.generate_doc_changelist(project_patches=pr_patch)
     else:
         # только генерируем документы по патчам, указанным в папке cfg
         print('Только генерация документов')
+        print(pathes_b_dir)
+        pl = [int(namespace.anum.split("-", 1)[0])] if len(namespace.anum.split("-", 1)) < 2 else list(
+            range(int(namespace.anum.split("-", 1)[0]), int(namespace.anum.split("-", 1)[1])))
+        print(pl)
+        # начнем обход папок для поиска патчей
+
 
 if __name__ == "__main__":
     main()
