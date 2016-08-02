@@ -26,7 +26,9 @@ def split_list_files(lmass):
 
 # Функция генерации update_log.docx
 def generate_doc_upd_log(author_name="Default", dir_name="\\0000-00-00_00\\", date_d="01 января 2000 года",
-                         list_patch=["1", "2"]):
+                         list_patch=None):
+    if list_patch is None:
+        list_patch = ["1", "2"]
     dir_name = "\\" + dir_name + "\\"
     # переменные текста
     p_1_pr_str = "Устанавливаются обновления, полученные " + date_d + " от сотрудника отдела внедрения ООО \"ПОТОК\" "
@@ -191,8 +193,14 @@ def generate_doc_upd_log(author_name="Default", dir_name="\\0000-00-00_00\\", da
 
 
 # Функция генерации changelist.docx
-def generate_doc_changelist(project_patches, base_pacthes=[""], sdk_patches=[""], doc_upd=[""]):
+def generate_doc_changelist(project_patches, base_pacthes=None, sdk_patches=None, doc_upd=None):
     # работа с документом
+    if doc_upd is None:
+        doc_upd = [""]
+    if sdk_patches is None:
+        sdk_patches = [""]
+    if base_pacthes is None:
+        base_pacthes = [""]
     document = dd.Document()
     style = document.styles['Normal']
     font = style.font

@@ -48,6 +48,7 @@ def create_parser():
 
 def main():
     # настроим локаль
+    global path_dir, path_dir
     locale.setlocale(locale.LC_ALL, "ru")
 
     # настроим морфологический анализатор
@@ -149,9 +150,16 @@ def main():
         print('Только генерация документов')
         print(pathes_b_dir)
         pl = [int(namespace.anum.split("-", 1)[0])] if len(namespace.anum.split("-", 1)) < 2 else list(
-            range(int(namespace.anum.split("-", 1)[0]), int(namespace.anum.split("-", 1)[1])))
+            range(int(namespace.anum.split("-", 1)[0]), int(namespace.anum.split("-", 1)[1]) + 1))
         print(pl)
         # начнем обход папок для поиска патчей
+        for path, subdirs, files in os.walk(pathes_b_dir):
+            for name in files:
+                if str(os.path.join(path, name)).endswith(".sql") and str(pl[0]) in str(os.path.join(path, name)):
+                    print(os.path.join(path, name))
+                    with open(os.path.join(path, name)) as f:
+                        data = f.read().replace('\n', '')
+                        print(data[data.find("/*") + 1: data.find("*/")])
 
 
 if __name__ == "__main__":

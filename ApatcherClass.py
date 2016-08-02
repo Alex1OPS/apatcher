@@ -18,6 +18,8 @@ class PatchBase:
 
 
 class PatchTemplate(PatchBase):
+    full = None
+
     def __init__(self, author=None, date=None, num=None, ticket_num=None, objects_new=None, objects_mod=None,
                  objects_del=None, comment=None, files_list=None, full=None):
         PatchBase.__init__(self, author, date, num, ticket_num, objects_new, objects_mod, objects_del, comment,
@@ -53,7 +55,8 @@ class Patch(PatchBase):
         with open(path_to_file, 'w') as fl:
             fl.write(self.full)
 
-    def make_patch(self, path_to_file):
+    @staticmethod
+    def make_patch(path_to_file):
         cmd = path_to_file
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
         out, err = p.communicate()
@@ -85,7 +88,8 @@ class RepoJob:
         return result
 
     # парсинг статуса репо вМс1 в 3 массива новых, изменнных, удаленных объектов
-    def parse_status(self, status_mass, b_patch=False):
+    @staticmethod
+    def parse_status(status_mass, b_patch=False):
         obj_new = []
         obj_mod = []
         obj_del = []
@@ -135,7 +139,9 @@ class CfgInfo:
 
 
 class PatchPrint:
-    def __init__(self, name="", list_files=[], description=""):
+    def __init__(self, name="", list_files=None, description=""):
+        if list_files is None:
+            list_files = []
         self.name = name
         self.list_files = list_files
         self.description = description
