@@ -1,6 +1,7 @@
 import configparser as cfg
 import os
 import subprocess
+import re
 
 
 class PatchBase:
@@ -139,9 +140,56 @@ class CfgInfo:
 
 
 class PatchPrint:
+    name = None
+    list_files = None
+    description = None
+
     def __init__(self, name="", list_files=None, description=""):
         if list_files is None:
             list_files = []
         self.name = name
         self.list_files = list_files
         self.description = description
+
+    def parse_from_exists(self, full_txt=""):
+        m = re.search('Автор(.+)Дата(.+)Номер патча(.+)'
+                      'Номер тикета(.+)Новые объекты(.+)'
+                      'Измененные объекты(.+)Удаленные объекты(.+)'
+                      'Комментарий(.+)Создан(.+)Список включённых файлов(.+)', full_txt)
+        self.name = m.group(3).lstrip(":").strip(" ").lstrip("0")
+        self.list_files = [x.strip(" ") for x in (m.group(10).lstrip(":")).split(",")]
+        self.description = m.group(8).lstrip(":").strip(" ")
+
+
+class PatchPrintExt(PatchPrint):
+    list_patches = None
+    sdk_patches = None
+    base_patches = None
+    proj_patches = None
+
+    def __init__(self, name, description=None, list_files=None, list_patches=None, sdk_patches=None,
+                 base_patches=None, proj_patches=None):
+        PatchPrint.__init__(name, list_files, description)
+        self.list_patches = list_patches
+        self.sdk_patches = sdk_patches
+        self.base_patches = base_patches
+        self.proj_patches = proj_patches
+
+
+def main():
+    t = PatchPrint()
+    t.parse_from_exists("*Автор:                Куртаков А.Е.  Дата:         "
+                        "        2016-07-05  Номер патча:          01614  Номер тикета:  "
+                        "       10801  Новые объекты:   Измененные объекты:   pack_bill  Удаленные объекты: "
+                        "     Комментарий:    "
+                        "      Скорректировано определение уровня логирования при массовом выставлении счетов "
+                        "(ускорено)  "
+                        "  Создан: 2016-07-05 11:45:08    Список включённых файлов: flexy-525019.sql,"
+                        " flexy-525051.sql, DIS_BASE_EXCHANGE.pck, DIS_SEARCH_INTERFACE.pck")
+
+    print(t.name)
+    print(t.list_files)
+    print(t.description)
+
+if __name__ == "__main__":
+    main()
