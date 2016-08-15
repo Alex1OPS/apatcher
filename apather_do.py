@@ -48,7 +48,7 @@ def create_parser():
 
 def main():
     # настроим локаль
-    global path_dir, path_dir
+    global path_dir
     locale.setlocale(locale.LC_ALL, "ru")
 
     # настроим морфологический анализатор
@@ -66,7 +66,10 @@ def main():
         t = ac.CfgInfo
         t.init(t)
         path_dir = t.path.get("projects_path", namespace.project)
-        pathes_b_dir = t.path.get("patches_path", namespace.directory)
+        if namespace.directory:
+            pathes_b_dir = t.path.get("patches_path", namespace.directory)
+        else:
+            pathes_b_dir = ""
         if namespace.only is True and not os.path.isdir(pathes_b_dir):
             raise Exception("Can\'t find directory for alias", namespace.directory)
         if not os.path.isdir(path_dir):
@@ -151,15 +154,24 @@ def main():
         print(pathes_b_dir)
         pl = [int(namespace.anum.split("-", 1)[0])] if len(namespace.anum.split("-", 1)) < 2 else list(
             range(int(namespace.anum.split("-", 1)[0]), int(namespace.anum.split("-", 1)[1]) + 1))
+        pl_dub = pl
         print(pl)
         # начнем обход папок для поиска патчей
         for path, subdirs, files in os.walk(pathes_b_dir):
             for name in files:
-                if str(os.path.join(path, name)).endswith(".sql") and str(pl[0]) in str(os.path.join(path, name)):
-                    print(os.path.join(path, name))
-                    with open(os.path.join(path, name)) as f:
-                        data = f.read().replace('\n', '')
-                        print(data[data.find("/*") + 1: data.find("*/")])
+                if str(os.path.join(path, name)).endswith(".sql"):
+                    for p_item in pl:
+                        if str(p_item) in str(os.path.join(path, name)).split("\\")[-1]:
+                            print(os.path.join(path, name))
+                            with open(os.path.join(path, name)) as f:
+                                data = f.read().replace('\n', '')
+                                patch_body = data[data.find("/*") + 1: data.find("*/")]
+                                tmp_ptch = ac.PatchPrint()
+                                tmp_ptch.parse_from_exists(patch_body)
+                                print(tmp_ptch.name)
+                                print(tmp_ptch.description)
+                                print(tmp_ptch.list_files)
+                                print("-----------------------------------------------")
 
 
 if __name__ == "__main__":
