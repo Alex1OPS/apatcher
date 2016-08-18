@@ -18,6 +18,7 @@ class CfgInfo:
         self.projects = p
 
 
+# noinspection PyCallByClass
 class DemoImpl(QMainWindow):
     def __init__(self, *args):
         super(DemoImpl, self).__init__(*args)
@@ -29,7 +30,7 @@ class DemoImpl(QMainWindow):
         self.listFiles.addItem("new1")
         self.listFiles.addItem("new2")
 
-    @pyqtSlot()
+    @pyqtSlot(name='on_button1_clicked')
     def on_button1_clicked(self):
         for s in "This is a demo".split(" "):
             self.list.addItem(s)
@@ -56,14 +57,15 @@ class DemoImpl(QMainWindow):
             "[{0}] Delete file \"{1}\" from list.".format(dt.datetime.now().strftime("%y-%m-%d %H:%M:%S"),
                                                           self.listFiles.currentItem().text()))
         listItems = self.listFiles.selectedItems()
-        if not listItems: return
+        if not listItems:
+            return
         for item in listItems:
             self.listFiles.takeItem(self.listFiles.row(item))
 
     @pyqtSlot(name='on_pushAdd_clicked')
     def add_file_to_list(self):
-        filter = "All (*);;sql (*.sql)"
-        fname_add = QFileDialog.getOpenFileNames(self, "Добавить файл", "", filter=filter)[0]
+        filter_filetype = "All (*);;sql (*.sql)"
+        fname_add = QFileDialog.getOpenFileNames(self, "Добавить файл", "", filter=filter_filetype)[0]
         for x in fname_add:
             self.listFiles.addItem(x)
             self.textLog.append(
