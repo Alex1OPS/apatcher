@@ -9,7 +9,8 @@ from pymorphy2 import MorphAnalyzer
 
 import ApatcherClass as ac
 import ApatcherMenu
-import test_docx as tdd
+import ApatcherUtils as autil
+import ApatcherGendocs as adoc
 
 version = "0.4b"
 
@@ -131,23 +132,9 @@ def main():
             ts_rp_patch = ac.RepoJob(path_dir=path_dir + "\\patches")
             objects_new_p, objects_mod_p, objects_del_p = ts_rp_patch.parse_status(ts_rp_patch.get_status(),
                                                                                    b_patch=True)
-            list_files = [] + objects_new_p + objects_mod_p + objects_del_p
-            list_files = [p.rsplit("\\", 1)[-1] for p in list_files]
-            if namespace.edit is True:
-                print("Edit list of patches -> True")
-                choice_ur = 0
-                while choice_ur != 3:
-                    ApatcherMenu.print_list(list_files, name="patches")
-                    choice_ur = ApatcherMenu.show_menu()
-                    list_files = ApatcherMenu.edit_list(lmass=list_files, action=choice_ur)
-            pr_author_str = morph.parse(fin_p.author.split(" ", 1)[0])[0].inflect({'gent'}).word.title() + " " + \
-                            fin_p.author.split(" ", 1)[1]
-            pr_list_files = [p.rsplit("\\", 1)[-1] for p in objects_new + objects_mod]
-            tdd.generate_doc_upd_log(author_name=pr_author_str, dir_name=namespace.dir, date_d=dt_str_make,
-                                     list_patch=list_files)
-            pr_patch = ac.PatchPrint(name=list_files[0].split("_", 1)[-1], list_files=pr_list_files,
-                                     description=namespace.text)
-            tdd.generate_doc_changelist(project_patches=pr_patch)
+            proj_patch = ac.PatchPrintExt.parse_from_exists(autil.get_patch_top_txt(objects_new_p[0]))
+            adoc.generate_doc_changelist(project_patches=[proj_patch for x in range(0,2)])
+            adoc.generate_doc_upd_log(author_name=t.author, list_patch=proj_patch.name)
     else:
         # только генерируем документы по патчам, указанным в папке cfg
         print('Только генерация документов')
@@ -163,15 +150,13 @@ def main():
                     for p_item in pl:
                         if str(p_item) in str(os.path.join(path, name)).split("\\")[-1]:
                             print(os.path.join(path, name))
-                            with open(os.path.join(path, name)) as f:
-                                data = f.read().replace('\n', '')
-                                patch_body = data[data.find("/*") + 1: data.find("*/")]
-                                tmp_ptch = ac.PatchPrint()
-                                tmp_ptch.parse_from_exists(patch_body)
-                                print(tmp_ptch.name)
-                                print(tmp_ptch.description)
-                                print(tmp_ptch.list_files)
-                                print("-----------------------------------------------")
+                            patch_body = autil.get_patch_top_txt(os.path.join(path, name))
+                            tmp_ptch = ac.PatchPrint()
+                            tmp_ptch.parse_from_exists(patch_body)
+                            print(tmp_ptch.name)
+                            print(tmp_ptch.description)
+                            print(tmp_ptch.list_files)
+                            print("-----------------------------------------------")
 
 
 if __name__ == "__main__":
