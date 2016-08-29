@@ -2,6 +2,7 @@ import configparser as cfg
 import os
 import subprocess
 import re
+import ApatcherUtils as autil
 
 
 class PatchBase:
@@ -143,6 +144,8 @@ class PatchPrint:
     name = None
     list_files = None
     description = None
+    db_change = None
+    web_change = None
 
     def __init__(self, name="", list_files=None, description=""):
         if list_files is None:
@@ -150,6 +153,9 @@ class PatchPrint:
         self.name = name
         self.list_files = list_files
         self.description = description
+        db_change, web_change = autil.split_list_files(self.list_files)
+        self.db_change = ", ".join(map(str, db_change))
+        self.web_change = ", ".join(map(str, web_change))
 
     def parse_from_exists(self, full_txt=""):
         m = re.search('Автор(.+)Дата(.+)Номер патча(.+)'
@@ -162,14 +168,20 @@ class PatchPrint:
 
 
 class PatchPrintExt(PatchPrint):
-    list_patches = None
+    author_name = None
+    date_cr = None
+    dir_take = None
     sdk_patches = None
     base_patches = None
     proj_patches = None
+    list_patches = None
 
     def __init__(self, name, description=None, list_files=None, list_patches=None, sdk_patches=None,
-                 base_patches=None, proj_patches=None):
-        PatchPrint.__init__(name, list_files, description)
+                 base_patches=None, proj_patches=None, author_name=None, date_cr=None, dir_take=None):
+        PatchPrint.__init__(self, name, list_files, description)
+        self.author_name = author_name
+        self.date_cr = date_cr
+        self.dir_take = dir_take
         self.list_patches = list_patches
         self.sdk_patches = sdk_patches
         self.base_patches = base_patches
@@ -190,6 +202,7 @@ def main():
     print(t.name)
     print(t.list_files)
     print(t.description)
+
 
 if __name__ == "__main__":
     main()

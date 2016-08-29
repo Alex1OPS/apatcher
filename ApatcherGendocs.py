@@ -13,7 +13,6 @@ def generate_doc_upd_log(author_name="Default", dir_name="\\0000-00-00_00\\", da
                          list_patch=None):
     if list_patch is None:
         list_patch = ["1", "2"]
-    dir_name = "\\" + dir_name + "\\"
     # переменные текста
     p_1_pr_str = "Устанавливаются обновления, полученные " + date_d + " от сотрудника отдела внедрения ООО \"ПОТОК\" "
     p_1_pr_str_1 = author_name + " в виде архива(директории) " + dir_name + "."
@@ -298,6 +297,7 @@ def generate_doc_changelist(project_patches=None, base_patches=None, sdk_patches
     run = hdr_cells[0].paragraphs[0].runs[0]
     pv_counter = 1
     for item in project_patches:
+        row_cells = table.add_row().cells
         row_cells[0].text = item.name
         row_cells[1].text = item.description
         row_cells[2].text = item.db_change
@@ -310,7 +310,7 @@ def generate_doc_changelist(project_patches=None, base_patches=None, sdk_patches
     r_7.add_break()
     p_7.add_run("Таблица №4. Перечень обновляемой документации", style='TitleStyle2').bold = True
 
-    # 8 блок - таблица проектных патчей
+    # 8 блок - таблица документов
     table = document.add_table(rows=1, cols=3)
     table.style = 'Table Grid'
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -342,7 +342,7 @@ def generate_doc_changelist(project_patches=None, base_patches=None, sdk_patches
 
 
 def main():
-    # generate_doc_upd_log("Богомолова А.В", "\\2016-01-01_05\\", "16 мая 2016 года", list_patch=["1.txt", "2.txt"])
+    generate_doc_upd_log("Богомолова А.В", "\\2016-01-01_05\\", "16 мая 2016 года", list_patch=["1.txt", "2.txt"])
     # generate_doc_changelist(base_pacthes=["m1", "m2"], sdk_patches=["patch_sdk_1",
     #                                                                 "patch_sdk_2",
     #                                                                 "patch_sdk_3"], project_patches=ac.PatchPrint(name="55",
@@ -354,9 +354,16 @@ def main():
     #                                                                                                      "pack_3.pck"],
     #                                                                                                  description="Новый патч"))
 
-    generate_doc_changelist(sdk_patches=[ac.PatchPrintExt(name="192", description="Новый патч 2",
+    generate_doc_changelist(project_patches=[ac.PatchPrintExt(name=str(x), description="Новый патч 2",
+                                                              list_files=["pacK_sdk.pck", "flexy-5252.sql",
+                                                                          "alma_dw.pck"])
+                                             for x in range(1, 9)],
+                            base_patches=[ac.PatchPrintExt(name=str(x), description="Новый патч 2",
+                                                           list_files=["pacK_sdk.pck", "flexy-5252.sql", "alma_dw.pck"])
+                                          for x in range(1, 20)],
+                            sdk_patches=[ac.PatchPrintExt(name=str(x), description="Новый патч 2",
                                                           list_files=["pacK_sdk.pck", "flexy-5252.sql", "alma_dw.pck"])
-                                         for x in range(1, 5)]
+                                         for x in range(1, 4)]
                             )
 
 
