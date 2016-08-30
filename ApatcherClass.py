@@ -129,13 +129,9 @@ class CfgInfo:
     path = None
 
     def __init__(self, path=None, author=None):
-        self.path = path
-        self.author = author
-
-    def init(self):
         dir = os.path.dirname(__file__)
         config = cfg.ConfigParser()
-        config.read(os.path.join(dir, "cfg/config.ini"))
+        config.read(os.path.join(dir, "config.ini"))
         self.author = config.get("info", "author")
         self.path = config
 
@@ -146,8 +142,9 @@ class PatchPrint:
     description = None
     db_change = None
     web_change = None
+    full_name = None
 
-    def __init__(self, name="", list_files=None, description=""):
+    def __init__(self, name="", list_files=None, description="", full_name=None):
         if list_files is None:
             list_files = []
         self.name = name
@@ -156,15 +153,22 @@ class PatchPrint:
         db_change, web_change = autil.split_list_files(self.list_files)
         self.db_change = ", ".join(map(str, db_change))
         self.web_change = ", ".join(map(str, web_change))
+        self.full_name = full_name
 
     def parse_from_exists(self, full_txt=""):
-        m = re.search('Автор(.+)Дата(.+)Номер патча(.+)'
-                      'Номер тикета(.+)Новые объекты(.+)'
-                      'Измененные объекты(.+)Удаленные объекты(.+)'
-                      'Комментарий(.+)Создан(.+)Список включённых файлов(.+)', full_txt)
-        self.name = m.group(3).lstrip(":").strip(" ").lstrip("0")
-        self.list_files = [x.strip(" ") for x in (m.group(10).lstrip(":")).split(",")]
-        self.description = m.group(8).lstrip(":").strip(" ")
+        try:
+            m = re.search('Автор(.+)Дата(.+)Номер патча(.+)'
+                          'Номер тикета(.+)Новые объекты(.+)'
+                          'Измененные объекты(.+)Удаленные объекты(.+)'
+                          'Комментарий(.+)Создан(.+)Список включённых файлов(.+)', full_txt)
+            self.name = m.group(3).lstrip(":").strip(" ").lstrip("0")
+            self.list_files = [x.strip(" ") for x in (m.group(10).lstrip(":")).split(",")]
+            db_change, web_change = autil.split_list_files(self.list_files)
+            self.db_change = ", ".join(map(str, db_change))
+            self.web_change = ", ".join(map(str, web_change))
+            self.description = m.group(8).lstrip(":").strip(" ")
+        except AttributeError:
+            raise Exception("Не все поля маски найдены в шапке патча")
 
 
 class PatchPrintExt(PatchPrint):
@@ -189,19 +193,33 @@ class PatchPrintExt(PatchPrint):
 
 
 def main():
-    t = PatchPrint()
-    t.parse_from_exists("*Автор:                Куртаков А.Е.  Дата:         "
-                        "        2016-07-05  Номер патча:          01614  Номер тикета:  "
-                        "       10801  Новые объекты:   Измененные объекты:   pack_bill  Удаленные объекты: "
-                        "     Комментарий:    "
-                        "      Скорректировано определение уровня логирования при массовом выставлении счетов "
-                        "(ускорено)  "
-                        "  Создан: 2016-07-05 11:45:08    Список включённых файлов: flexy-525019.sql,"
-                        " flexy-525051.sql, DIS_BASE_EXCHANGE.pck, DIS_SEARCH_INTERFACE.pck")
-
-    print(t.name)
-    print(t.list_files)
-    print(t.description)
+    # t = PatchPrint()
+    # t.parse_from_exists("*Автор:                Куртаков А.Е.  Дата:         "
+    #                     "        2016-07-05  Номер патча:          01614  Номер тикета:  "
+    #                     "       10801  Новые объекты:   Измененные объекты:   pack_bill  Удаленные объекты: "
+    #                     "     Комментарий:    "
+    #                     "      Скорректировано определение уровня логирования при массовом выставлении счетов "
+    #                     "(ускорено)  "
+    #                     "  Создан: 2016-07-05 11:45:08    Список включённых файлов: flexy-525019.sql,"
+    #                     " flexy-525051.sql, DIS_BASE_EXCHANGE.pck, DIS_SEARCH_INTERFACE.pck")
+    #
+    # print(t.name)
+    # print(t.list_files)
+    # print(t.description)
+    sarg_line = "{s:189-191,b:1617-1620,p:814-817}"
+    p1, p2, p3 = autil.parse_nums_patches_interval(sarg_line)
+    print(p1)
+    print(p2)
+    print(p3)
+    _, tr_sdk, tr_base, tr_proj = autil.get_all_patch_files_by_nums("D:\\FProjects\\database\\sdk\\database\\patches",
+                                                                    "D:\\FProjects\\database\\billing\\database\\patches",
+                                                                    "D:\\FProjects\\DISCOVERY\\patches",
+                                                                    p1,
+                                                                    p2,
+                                                                    p3)
+    print(tr_sdk)
+    print(tr_base)
+    print(tr_proj)
 
 
 if __name__ == "__main__":

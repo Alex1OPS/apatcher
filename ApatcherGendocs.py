@@ -343,17 +343,6 @@ def generate_doc_changelist(project_patches=None, base_patches=None, sdk_patches
 
 def main():
     generate_doc_upd_log("Богомолова А.В", "\\2016-01-01_05\\", "16 мая 2016 года", list_patch=["1.txt", "2.txt"])
-    # generate_doc_changelist(base_pacthes=["m1", "m2"], sdk_patches=["patch_sdk_1",
-    #                                                                 "patch_sdk_2",
-    #                                                                 "patch_sdk_3"], project_patches=ac.PatchPrint(name="55",
-    #                                                                                                  list_files=[
-    #                                                                                                      "flexy-515100.sql",
-    #                                                                                                      "pack_1.pck",
-    #                                                                                                      "flexy-51000.sql",
-    #                                                                                                      "pack_2.pck",
-    #                                                                                                      "pack_3.pck"],
-    #                                                                                                  description="Новый патч"))
-
     generate_doc_changelist(project_patches=[ac.PatchPrintExt(name=str(x), description="Новый патч 2",
                                                               list_files=["pacK_sdk.pck", "flexy-5252.sql",
                                                                           "alma_dw.pck"])
