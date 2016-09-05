@@ -155,7 +155,7 @@ class PatchPrint:
         self.web_change = ", ".join(map(str, web_change))
         self.full_name = full_name
 
-    def parse_from_exists(self, full_txt=""):
+    def parse_from_exists(self, full_txt="", full_name=""):
         try:
             m = re.search('Автор(.+)Дата(.+)Номер патча(.+)'
                           'Номер тикета(.+)Новые объекты(.+)'
@@ -166,7 +166,8 @@ class PatchPrint:
             db_change, web_change = autil.split_list_files(self.list_files)
             self.db_change = ", ".join(map(str, db_change))
             self.web_change = ", ".join(map(str, web_change))
-            self.description = m.group(8).lstrip(":").strip(" ")
+            self.description = m.group(8).lstrip(":").strip()
+            self.full_name = full_name
         except AttributeError:
             raise Exception("Не все поля маски найдены в шапке патча")
 

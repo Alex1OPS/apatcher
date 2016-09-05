@@ -12,16 +12,15 @@ import ApatcherMenu
 import ApatcherUtils as autil
 import ApatcherGendocs as adoc
 
-version = "0.5b"
+version = "0.6b"
 debug_mode = True
 
 
 # Не будем городить класс для парсера, т.к. argparse создает его внутри методов.
-# Навернем немного функциональной лапши до непосредственного формирования шаблона.
 def create_parser():
     parser = argparse.ArgumentParser(
         prog="apatcher_forward",
-        description="Автоматизированная сборка template патча",
+        description="Автоматизированная сборка template патча и сопровождающей документации",
         epilog="(c) Alex1OPS.",
         add_help=False
     )
@@ -48,7 +47,7 @@ def create_parser():
 
 
 def main():
-    # настроим локаль
+    global path_dir, tcfg_arg
     locale.setlocale(locale.LC_ALL, "ru")
 
     # настроим морфологический анализатор
@@ -63,9 +62,9 @@ def main():
     namespace = parser.parse_args(sys.argv[1:])
 
     try:
-        t = ac.CfgInfo()
+        tcfg_arg = ac.CfgInfo()
         if namespace.project:
-            path_dir = t.path.get("projects_path", namespace.project)
+            path_dir = tcfg_arg.path.get("projects_path", namespace.project)
         else:
             path_dir = ""
         if not os.path.isdir(path_dir) and namespace.project:
@@ -96,11 +95,11 @@ def main():
         list_files = [] + objects_new + objects_mod
 
         # получим template sql для патча
-        ptch_tmp = ac.PatchTemplate
-        ptch_tmp.take_from(ptch_tmp)
+        ptch_tmp = ac.PatchTemplate()
+        ptch_tmp.take_from()
 
         # разберем статусы объектов репо по полям патча
-        fin_p = ac.Patch(author=t.author)
+        fin_p = ac.Patch(author=tcfg_arg.author)
         fin_p.objects_new = ", ".join([p.rsplit("\\", 1)[-1] for p in objects_new])
         fin_p.objects_mod = ", ".join([p.rsplit("\\", 1)[-1] for p in objects_mod])
         fin_p.objects_del = ", ".join([p.rsplit("\\", 1)[-1] for p in objects_del])
@@ -131,16 +130,20 @@ def main():
             objects_new_p, objects_mod_p, objects_del_p = ts_rp_patch.parse_status(ts_rp_patch.get_status(),
                                                                                    b_patch=True)
             proj_patch = ac.PatchPrint()
-            proj_patch.parse_from_exists(autil.get_patch_top_txt(objects_new_p[0]))
+            proj_patch.parse_from_exists(autil.get_patch_top_txt(objects_new_p[0]),
+                                         full_name=str(objects_new_p[0]).split("\\")[-1])
 
             # сгенерируем доки
-            adoc.generate_doc_changelist(project_patches=[proj_patch for x in range(0, 2)])
-            adoc.generate_doc_upd_log(author_name=t.author, list_patch=proj_patch.name)
+            adoc.generate_doc_changelist(project_patches=[proj_patch for x in range(0, 1)])
+            adoc.generate_doc_upd_log(author_name=tcfg_arg.author,
+                                      list_patch=[proj_patch.full_name for x in range(0,1)],
+                                      dir_name=namespace.dir,
+                                      date_d=dt_str_make)
     else:
         # только генерируем документы по патчам, указанным в папке cfg
         p_sdk, p_base, p_proj = autil.parse_nums_patches_interval(namespace.anum)
-        tf_all, tf_sdk, tf_base, tf_proj = autil.get_all_patch_files_by_nums(t.path.get("patches_path", "sdk"),
-                                                                             t.path.get("patches_path", "base"),
+        tf_all, tf_sdk, tf_base, tf_proj = autil.get_all_patch_files_by_nums(tcfg_arg.path.get("patches_path", "sdk"),
+                                                                             tcfg_arg.path.get("patches_path", "base"),
                                                                              path_dir,
                                                                              p_sdk,
                                                                              p_base,
@@ -169,7 +172,7 @@ def main():
         tf_all.sort()
 
         # сформируем доки
-        adoc.generate_doc_upd_log(t.author, namespace.dir, dt_str_make, list_patch=tf_all)
+        adoc.generate_doc_upd_log(tcfg_arg.author, namespace.dir, dt_str_make, list_patch=tf_all)
         adoc.generate_doc_changelist(project_patches=proj_patches,
                                      base_patches=base_patches,
                                      sdk_patches=sdk_patches)

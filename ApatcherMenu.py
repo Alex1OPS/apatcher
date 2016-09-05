@@ -1,3 +1,4 @@
+# модуль для работ с консольным меню по редактированию списка файлов
 def show_menu():
     print("\t1. Add file;")
     print("\t2. Delete file;")
