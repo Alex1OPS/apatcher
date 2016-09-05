@@ -4,6 +4,7 @@ import datetime
 import locale
 import os
 import sys
+import logging
 
 from pymorphy2 import MorphAnalyzer
 
@@ -48,6 +49,11 @@ def create_parser():
 
 def main():
     global path_dir, tcfg_arg
+    logging.basicConfig(filename="back/ct_main.log",
+                        level=logging.INFO,
+                        format='[%(asctime)s][%(levelname)s] %(message)s',
+                        datefmt='%m/%d/%Y %I:%M:%S',
+                        filemode="a+")
     locale.setlocale(locale.LC_ALL, "ru")
 
     # настроим морфологический анализатор
@@ -124,7 +130,7 @@ def main():
             topl.send_commit(comment_line=fin_p.comment)
 
         # если нужно, соберем сопровождающие документы
-        if namespace.docs is True:
+        if namespace.docs is True and namespace.nomake is False:
             # получим статус репо - ожидаем там увидеть патч
             ts_rp_patch = ac.RepoJob(path_dir=path_dir + "\\patches")
             objects_new_p, objects_mod_p, objects_del_p = ts_rp_patch.parse_status(ts_rp_patch.get_status(),

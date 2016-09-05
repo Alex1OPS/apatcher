@@ -2,8 +2,10 @@ import configparser as cfg
 import os
 import subprocess
 import re
+import logging
 import ApatcherUtils as autil
 
+logger = logging.getLogger(__name__)
 
 class PatchBase:
     def __init__(self, author=None, date=None, num=None, ticket_num=None, objects_new=None, objects_mod=None,

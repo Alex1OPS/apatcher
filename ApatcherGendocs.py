@@ -1,4 +1,5 @@
 import docx as dd
+import logging
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.style import WD_STYLE_TYPE
 from docx.shared import Pt
@@ -7,6 +8,7 @@ from docx.shared import Cm
 from docx.enum.table import WD_TABLE_ALIGNMENT
 import ApatcherClass as ac
 
+logger = logging.getLogger(__name__)
 
 # Функция генерации update_log.docx
 def generate_doc_upd_log(author_name="Default", dir_name="\\0000-00-00_00\\", date_d="01 января 2000 года",
