@@ -36,12 +36,22 @@ def parse_nums_patches_interval(sarg_line):
     sdk_num = sarg_line[sarg_line.find("s:") + 2: sarg_line.find(",", sarg_line.find("s:"))]
     base_num = sarg_line[sarg_line.find("b:") + 2: sarg_line.find(",", sarg_line.find("b:"))]
     proj_num = sarg_line[sarg_line.find("p:") + 2: sarg_line.find(",", sarg_line.find("p:"))]
-    p1 = [int(sdk_num.split("-", 1)[0])] if len(sdk_num.split("-", 1)) < 2 else list(
-        range(int(sdk_num.split("-", 1)[0]), int(sdk_num.split("-", 1)[1]) + 1))
-    p2 = [int(base_num.split("-", 1)[0])] if len(base_num.split("-", 1)) < 2 else list(
-        range(int(base_num.split("-", 1)[0]), int(base_num.split("-", 1)[1]) + 1))
-    p3 = [int(proj_num.split("-", 1)[0])] if len(proj_num.split("-", 1)) < 2 else list(
-        range(int(proj_num.split("-", 1)[0]), int(proj_num.split("-", 1)[1]) + 1))
+    try:
+        p1 = [int(sdk_num.split("-", 1)[0])] if len(sdk_num.split("-", 1)) < 2 else list(
+            range(int(sdk_num.split("-", 1)[0]), int(sdk_num.split("-", 1)[1]) + 1))
+    except ValueError:
+        p1 = []
+    try:
+        p2 = [int(base_num.split("-", 1)[0])] if len(base_num.split("-", 1)) < 2 else list(
+            range(int(base_num.split("-", 1)[0]), int(base_num.split("-", 1)[1]) + 1))
+    except ValueError:
+        p2 = []
+
+    try:
+        p3 = [int(proj_num.split("-", 1)[0])] if len(proj_num.split("-", 1)) < 2 else list(
+            range(int(proj_num.split("-", 1)[0]), int(proj_num.split("-", 1)[1]) + 1))
+    except ValueError:
+        p3 = []
 
     return p1, p2, p3
 

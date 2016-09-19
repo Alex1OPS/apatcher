@@ -86,7 +86,7 @@ class RepoJob:
         cmd = "svn status " + self.path_dir
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
         out, err = p.communicate()
-        result = out.decode("utf-8")
+        result = out.decode("utf-8", errors='ignore')
         result = result.split("\n")
         result = [p[:-1] for p in result]
         return result
@@ -105,7 +105,7 @@ class RepoJob:
                 p_fmt = ""
             if ("patches" in ptr or "template.sql" in ptr) and b_patch is not True:
                 continue
-            if p_fmt not in ("sql", "pck", "xml"):
+            if p_fmt not in ("sql", "pck", "xml", "fnc", "prc", "tps"):
                 continue
             if ptr[:1] == 'M':
                 obj_mod.append(ptr[1:].lstrip())
@@ -120,7 +120,7 @@ class RepoJob:
         cmd = "svn commit " + self.path_dir + " -m \"" + comment_line + " \""
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
         out, err = p.communicate()
-        result = out.decode("utf-8")
+        result = out.decode("utf-8", errors='ignore')
         result = result.split("\n")
         result = "\n".join(result)
         return result
