@@ -5,6 +5,8 @@ import locale
 import os
 import sys
 import logging
+import time
+import threading
 
 from pymorphy2 import MorphAnalyzer
 
@@ -13,7 +15,7 @@ import ApatcherMenu
 import ApatcherUtils as autil
 import ApatcherGendocs as adoc
 
-version = "0.6b"
+__version__ = "0.6.5"
 debug_mode = True
 
 
@@ -35,6 +37,7 @@ def create_parser():
     parent_group.add_argument("-o", "--only", action='store_true', default=False,
                               help="Только генерация сопровождающих документов")
     parent_group.add_argument("-a", "--anum", help="Номера патчей для добавления документации")
+    parent_group.add_argument("-f", "--fwopt", help="Ключи для стандартной патчилки")
     parent_group.add_argument("-r", "--dir", default="", help="Папка, в которой будет передан патч")
     parent_group.add_argument("-t", "--text", default="Empty comment line", help="Текст комментария к коммиту")
     parent_group.add_argument("-e", "--edit", action='store_true', default=False,
@@ -43,18 +46,27 @@ def create_parser():
     parent_group.add_argument("--version",
                               action="version",
                               help="Номер версии",
-                              version="%(prog)s {}".format(version))
+                              version="%(prog)s {}".format(__version__))
     return parser
 
 
 def main():
     global path_dir, tcfg_arg
+    start_exec_time = time.time()
+    log_dir = "back"
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
     logging.basicConfig(filename="back/ct_main.log",
                         level=logging.INFO,
                         format='[%(asctime)s][%(levelname)s] %(message)s',
                         datefmt='%m/%d/%Y %I:%M:%S',
                         filemode="a+")
     locale.setlocale(locale.LC_ALL, "ru")
+
+    #запусти параллельно сжатие логов
+    trd = threading.Thread(target=autil.zip_old_logs())
+    trd.start()
 
     # настроим морфологический анализатор
     morph = MorphAnalyzer()
@@ -66,19 +78,24 @@ def main():
     # получим аргументы командной строки
     parser = create_parser()
     namespace = parser.parse_args(sys.argv[1:])
+    logging.info(sys.argv)
 
     try:
         tcfg_arg = ac.CfgInfo()
         if namespace.project:
             path_dir = tcfg_arg.path.get("projects_path", namespace.project)
         else:
+            logging.warning("path_dir to project is empty")
             path_dir = ""
         if not os.path.isdir(path_dir) and namespace.project:
+            logging.error("Can\'t find directory for project = {0}".format(namespace.project))
             raise Exception("Can\'t find directory for project", namespace.project)
     except configparser.NoOptionError:
+        logging.error("Config file parse error")
         print("Config file parse error")
         exit(0)
     except Exception as inst:
+        logging.error("Unknown error: {0}".format(inst))
         print(inst)
         exit(0)
 
@@ -110,7 +127,7 @@ def main():
         fin_p.objects_mod = ", ".join([p.rsplit("\\", 1)[-1] for p in objects_mod])
         fin_p.objects_del = ", ".join([p.rsplit("\\", 1)[-1] for p in objects_del])
         fin_p.comment = namespace.text
-        fin_p.files_list = "\n".join(["@@ ..\\sysobjects" + p.split("\\sysobjects", 1)[-1] for p in list_files])
+        fin_p.files_list = "\n".join(["@@ " + p for p in list_files])
         fin_p.full = ptch_tmp.full
 
         # запишем template.sql для патча
@@ -119,7 +136,8 @@ def main():
 
         # соберем патч
         if namespace.nomake is False:
-            b_sucs_making = fin_p.make_patch(path_to_file=os.path.join(path_dir, "patch-template/patch.bat"))
+            b_sucs_making = fin_p.make_patch_fw(path_to_file=os.path.join(path_dir, "patch-template/template.sql"),
+                                                fwoption=namespace.fwopt)
             if b_sucs_making is True:
                 print("Making patch -> Success")
             else:
@@ -182,6 +200,10 @@ def main():
         adoc.generate_doc_changelist(project_patches=proj_patches,
                                      base_patches=base_patches,
                                      sdk_patches=sdk_patches)
+
+    elapsed_time = time.time() - start_exec_time
+    print("Runtime: {0} sec".format(round(elapsed_time,3)))
+    logging.info("Runtime: {0} sec".format(round(elapsed_time,3)))
 
 
 if __name__ == "__main__":

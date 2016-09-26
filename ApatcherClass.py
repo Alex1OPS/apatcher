@@ -4,6 +4,8 @@ import subprocess
 import re
 import logging
 import ApatcherUtils as autil
+import sys
+import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +71,28 @@ class Patch(PatchBase):
         stat_msg = result[-3]
 
         if "DONE" in stat_msg:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def make_patch_fw(path_to_file, fwoption):
+        dt_str = datetime.datetime.now().strftime("back\\%Y%m%d_%H_%M_%S_fwlog.log")
+        orig_stdout = sys.stdout
+        f = open(dt_str, 'w+')
+        sys.stdout = f
+
+        autil.make_patch_f(args=[path_to_file, fwoption])
+
+        sys.stdout = orig_stdout
+        f.close()
+        # получим последнюю строку файла с оценкой в 100 символов для получение статуса патча
+        f = open(dt_str, 'rb')
+        f.seek(-100, 2)
+        last = f.readlines()[-1].decode()
+        f.close()
+
+        if "DONE" in last:
             return True
         else:
             return False

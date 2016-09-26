@@ -1,4 +1,5 @@
 import glob
+from fw_patches.Prepare import PatchPrepare
 
 
 # разбиение списка файлов на две категории - бд и веб
@@ -88,7 +89,32 @@ def get_all_patch_files_by_nums(p_dir_sdk, p_dir_base, p_dir_proj, p_sdk=None, p
     fl_proj = sorted(list(set(fl_proj)))
     return fl_lst, fl_sdk, fl_base, fl_proj
 
+# вызов создания патча из fw_patches
+def make_patch_f(args):
+    if args[0][:2].upper() == '-S':
+        p = PatchPrepare(args[0][2:])
+        args = args[1:]
+        if not args:
+            print ("Usage 'python Prepare.py [-Ssettings.conf] <template.sql> [re|<patch-number>|out <filename>]'")
+    else:
+        p = PatchPrepare()
 
+    template = args[0]
+    replace = None
+    forceOutput = None
+    if len(args) > 2:
+        assert args[1] == '-out', 'Invalid option. Required re or patch-number or out <filename>'
+        forceOutput = args[2]
+    elif len(args) > 1:
+        replace = args[1]
+
+    p.prepare_impl(template, replace, forceOutput)
+
+# периодическое сжатие логов
+def zip_old_logs():
+    return 0
+
+# тестирование
 def main():
     _, tr_sdk, tr_base, tr_proj = get_all_patch_files_by_nums("D:\\FProjects\\database\\sdk\\database\\patches",
                                                               "D:\\FProjects\\database\\billing\\database\\patches",
