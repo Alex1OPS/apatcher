@@ -10,12 +10,12 @@ import threading
 
 from pymorphy2 import MorphAnalyzer
 
-import ApatcherClass as ac
-import ApatcherMenu
-import ApatcherUtils as autil
-import ApatcherGendocs as adoc
+import fwpt_apatcher.ApatcherClass as ac
+import fwpt_apatcher.ApatcherMenu
+import fwpt_apatcher.ApatcherUtils as autil
+import fwpt_apatcher.ApatcherGendocs as adoc
 
-__version__ = "0.6.5"
+__version__ = "0.7.0"
 debug_mode = True
 
 
