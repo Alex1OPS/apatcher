@@ -1,6 +1,12 @@
 import glob
+import os
+import time
+import logging
+import zipfile
 from fw_patches.Prepare import PatchPrepare
 
+logger = logging.getLogger(__name__)
+zip_log_name = "archlogs.zip"
 
 # разбиение списка файлов на две категории - бд и веб
 def split_list_files(lmass):
@@ -83,7 +89,6 @@ def get_all_patch_files_by_nums(p_dir_sdk, p_dir_base, p_dir_proj, p_sdk=None, p
             fl_lst += lst_tm
             fl_proj += lst_tm
 
-    fl_lst = sorted(list(set(fl_lst)))
     fl_sdk = sorted(list(set(fl_sdk)))
     fl_base = sorted(list(set(fl_base)))
     fl_proj = sorted(list(set(fl_proj)))
@@ -111,20 +116,40 @@ def make_patch_f(args):
     p.prepare_impl(template, replace, forceOutput)
 
 # периодическое сжатие логов
-def zip_old_logs():
+def zip_old_logs(logdir, critdays=7):
+    current_time = time.time()
+
+    if not os.path.exists(os.path.join(logdir, zip_log_name)):
+        zarch = zipfile.ZipFile(os.path.join(logdir, zip_log_name), "w")
+    else:
+        zarch = zipfile.ZipFile(os.path.join(logdir, zip_log_name), "a")
+
+
+    for f in os.listdir(logdir):
+        creation_time = os.path.getctime(os.path.join(logdir, f))
+        if (current_time - creation_time) // (24 * 3600) >= int(critdays) and "main" not in f:
+            zarch.write(os.path.join(logdir, f), os.path.basename(os.path.join(logdir, f)))
+            os.remove(os.path.join(logdir, f))
+            logger.info('File {} replaced to zip log file.'.format(f))
+            logger.info('File {} removed from log directory.'.format(f))
     return 0
 
 # тестирование
 def main():
-    _, tr_sdk, tr_base, tr_proj = get_all_patch_files_by_nums("D:\\FProjects\\database\\sdk\\database\\patches",
-                                                              "D:\\FProjects\\database\\billing\\database\\patches",
-                                                              "D:\\FProjects\\DISCOVERY\\patches",
-                                                              [189, 190, 191],
-                                                              [1617, 1618, 1619, 1620],
-                                                              [31, 32, 33])
-    print(tr_sdk)
-    print(tr_base)
-    print(tr_proj)
+    # _, tr_sdk, tr_base, tr_proj = get_all_patch_files_by_nums("D:\\FProjects\\database\\sdk\\database\\patches",
+    #                                                           "D:\\FProjects\\database\\billing\\database\\patches",
+    #                                                           "D:\\FProjects\\DISCOVERY\\patches",
+    #                                                           [189, 190, 191],
+    #                                                           [1617, 1618, 1619, 1620],
+    #                                                           [31, 32, 33])
+    # print(tr_sdk)
+    # print(tr_base)
+    # print(tr_proj)
+
+    ls, lp, lk = parse_nums_patches_interval("[s:215-217,b:1691-1693,p:]")
+    print(ls)
+    print(lp)
+    print(lk)
 
 
 if __name__ == "__main__":

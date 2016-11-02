@@ -223,7 +223,7 @@ def generate_doc_changelist(project_patches=None, base_patches=None, sdk_patches
     p_1 = document.add_paragraph()
     r_1 = p_1.add_run()
     r_1.add_break()
-    p_1.add_run("Таблица №1. Описание обновлений (Базовые патчи)", style='TitleStyle2').bold = True
+    p_1.add_run("Таблица №1. Описание обновлений (Патчи SDK)", style='TitleStyle2').bold = True
 
     # 2 блок - таблица Базовых патчей
     table = document.add_table(rows=1, cols=4)
@@ -240,7 +240,7 @@ def generate_doc_changelist(project_patches=None, base_patches=None, sdk_patches
     hdr_cells[3].width = Cm(7)
     run = hdr_cells[0].paragraphs[0].runs[0]
     pv_counter = 1
-    for item in base_patches:
+    for item in sdk_patches:
         row_cells = table.add_row().cells
         row_cells[0].text = item.name
         row_cells[1].text = item.description
@@ -252,7 +252,7 @@ def generate_doc_changelist(project_patches=None, base_patches=None, sdk_patches
     p_3 = document.add_paragraph()
     r_3 = p_3.add_run()
     r_3.add_break()
-    p_3.add_run("Таблица №2. Описание обновлений (Патчи SDK)", style='TitleStyle2').bold = True
+    p_3.add_run("Таблица №2. Описание обновлений (Базовые патчи)", style='TitleStyle2').bold = True
 
     # 4 блок - таблица SDK патчей
     table = document.add_table(rows=1, cols=4)
@@ -269,7 +269,7 @@ def generate_doc_changelist(project_patches=None, base_patches=None, sdk_patches
     hdr_cells[3].width = Cm(7)
     run = hdr_cells[0].paragraphs[0].runs[0]
     pv_counter = 1
-    for item in sdk_patches:
+    for item in base_patches:
         row_cells = table.add_row().cells
         row_cells[0].text = item.name
         row_cells[1].text = item.description

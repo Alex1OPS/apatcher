@@ -1,21 +1,21 @@
 import argparse
-import configparser
 import datetime
 import locale
 import os
 import sys
+import configparser
 import logging
 import time
 import threading
 
 from pymorphy2 import MorphAnalyzer
 
-import fwpt_apatcher.ApatcherClass as ac
-import fwpt_apatcher.ApatcherMenu
-import fwpt_apatcher.ApatcherUtils as autil
-import fwpt_apatcher.ApatcherGendocs as adoc
+import ApatcherClass as ac
+import ApatcherMenu as amenu
+import ApatcherUtils as autil
+import ApatcherGendocs as adoc
 
-__version__ = "0.7.0"
+__version__ = "0.7.7"
 debug_mode = True
 
 
@@ -64,10 +64,6 @@ def main():
                         filemode="a+")
     locale.setlocale(locale.LC_ALL, "ru")
 
-    #запусти параллельно сжатие логов
-    trd = threading.Thread(target=autil.zip_old_logs())
-    trd.start()
-
     # настроим морфологический анализатор
     morph = MorphAnalyzer()
     # текущая дата в виде строки
@@ -99,6 +95,10 @@ def main():
         print(inst)
         exit(0)
 
+    #запусти параллельно сжатие логов
+    trd = threading.Thread(target=autil.zip_old_logs(log_dir,critdays=tcfg_arg.path.get("info", "loglife")))
+    trd.start()
+
     # отобразим конфигурацию
     if debug_mode is True:
         print("Configuration: ")
@@ -113,8 +113,8 @@ def main():
         topl = ac.RepoJob(path_dir=path_dir)
         objects_new, objects_mod, objects_del = topl.parse_status(topl.get_status())
         if namespace.edit is True:
-            objects_new, objects_mod, objects_del = ApatcherMenu.edit_files_list(new_lm=objects_new, mod_lm=objects_mod,
-                                                                                 del_lm=objects_del)
+            objects_new, objects_mod, objects_del = amenu.edit_files_list(new_lm=objects_new, mod_lm=objects_mod,
+                                                                          del_lm=objects_del)
         list_files = [] + objects_new + objects_mod
 
         # получим template sql для патча
@@ -193,7 +193,6 @@ def main():
             proj_patches.append(tp)
 
         tf_all = [x.split("\\")[-1] for x in tf_all]
-        tf_all.sort()
 
         # сформируем доки
         adoc.generate_doc_upd_log(tcfg_arg.author, namespace.dir, dt_str_make, list_patch=tf_all)

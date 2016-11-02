@@ -195,6 +195,7 @@ class PatchPrint:
             self.description = m.group(8).lstrip(":").strip()
             self.full_name = full_name
         except AttributeError:
+            logging.error("Не все поля маски найдены в шапке патча")
             raise Exception("Не все поля маски найдены в шапке патча")
 
 
