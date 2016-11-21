@@ -205,7 +205,7 @@ class PatchPrint:
                 list_files = new_files + change_files + del_files
                 lst_files = [x.strip(" ") for x in (list_files.lstrip(":")).split(",")]
 
-            self.name = num_patch
+            self.name = num_patch.lstrip("0")
             self.list_files = lst_files
             db_change, web_change = autil.split_list_files(self.list_files)
             self.db_change = ", ".join(map(str, db_change))
