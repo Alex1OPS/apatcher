@@ -15,7 +15,7 @@ import ApatcherMenu as amenu
 import ApatcherUtils as autil
 import ApatcherGendocs as adoc
 
-__version__ = "0.8.3"
+__version__ = "0.8.6"
 debug_mode = True
 
 
@@ -54,8 +54,12 @@ def main():
     global path_dir, tcfg_arg
     start_exec_time = time.time()
     log_dir = "back"
+    tmp_dir = "tmp"
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
+
+    if not os.path.exists(tmp_dir):
+        os.makedirs(tmp_dir)
 
     logging.basicConfig(filename="back/ct_main.log",
                         level=logging.INFO,

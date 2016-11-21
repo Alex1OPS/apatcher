@@ -188,21 +188,33 @@ class PatchPrint:
         self.full_name = full_name
 
     def parse_from_exists(self, full_txt="", full_name=""):
+        remap = {ord('\t') : None, ord('\f') : None, ord('\r') : None}
+        num_patch = 0
+
         try:
-            m = re.search('Автор(.+)Дата(.+)Номер патча(.+)'
-                          'Номер тикета(.+)Новые объекты(.+)'
-                          'Измененные объекты(.+)Удаленные объекты(.+)'
-                          'Комментарий(.+)Создан(.+)Список включённых файлов(.+)', full_txt)
-            self.name = m.group(3).lstrip(":").strip(" ").lstrip("0")
-            self.list_files = [x.strip(" ") for x in (m.group(10).lstrip(":")).split(",")]
+            author = full_txt[full_txt.find("Автор:") + len("Автор") : full_txt.find("Дата:")].strip(" :\n").translate(remap)
+            num_patch = full_txt[full_txt.find("Номер патча:") + len("Номер патча") : full_txt.find("Номер тикета:")].strip(" :\n").translate(remap)
+            descr = full_txt[full_txt.find("Комментарий:") + len("Комментарий") : full_txt.find("Создан:")].strip(" :\n").replace("\n", "").translate(remap)
+            if full_txt.find("Создан:") != -1 and full_txt.find("Список включённых файлов:") != -1:
+                list_files = full_txt[full_txt.find("Список включённых файлов:") + len("Список включённых файлов") : len(full_txt)].strip(" :\n").translate(remap)
+                lst_files = [x.strip(" ") for x in (list_files.lstrip(":")).split(",")]
+            else:
+                new_files = full_txt[full_txt.find("Новые объекты:") + len("Новые объекты") : full_txt.find("Измененные объекты:")].strip(" :\n").translate(remap)
+                change_files = full_txt[full_txt.find("Измененные объекты:") + len("Измененные объекты") : full_txt.find("Удаленные объекты:")].strip(" :\n").translate(remap)
+                del_files = full_txt[full_txt.find("Удаленные объекты:") + len("Удаленные объекты") : full_txt.find("Комментарий:")].strip(" :\n").translate(remap)
+                list_files = new_files + change_files + del_files
+                lst_files = [x.strip(" ") for x in (list_files.lstrip(":")).split(",")]
+
+            self.name = num_patch
+            self.list_files = lst_files
             db_change, web_change = autil.split_list_files(self.list_files)
             self.db_change = ", ".join(map(str, db_change))
             self.web_change = ", ".join(map(str, web_change))
-            self.description = m.group(8).lstrip(":").strip()
+            self.description = descr
             self.full_name = full_name
-        except AttributeError:
-            logging.error("Не все поля маски найдены в шапке патча")
-            raise Exception("Не все поля маски найдены в шапке патча")
+        except Exception as e:
+            logging.error("Некорректный парсинг шапки патча. Исключение: {}".format(e))
+            raise Exception("Некорректный парсинг шапки патча #{}".format(num_patch))
 
 
 class PatchPrintExt(PatchPrint):
