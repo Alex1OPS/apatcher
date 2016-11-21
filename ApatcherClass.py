@@ -38,7 +38,7 @@ class PatchTemplate(PatchBase):
 
     def take_from(self, path_to_file=PATH_TO_TMPL):
         try:
-            with open(os.path.join(os.path.dirname(__file__), path_to_file), 'r') as fl:
+            with open(os.path.dirname(os.path.realpath(sys.argv[0]), path_to_file), 'r') as fl:
                 file_data = fl.read()
             self.full = file_data
         except FileNotFoundError:
