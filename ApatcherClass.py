@@ -155,9 +155,10 @@ class CfgInfo:
     path = None
 
     def __init__(self, path=None, author=None):
-        dir = os.path.dirname(os.path.realpath(__file__))
+        dir = os.path.dirname(os.path.realpath(sys.argv[0]))
         config = cfg.ConfigParser()
         config.read(os.path.join(dir, "config.ini"))
+        logging.info(os.path.join(dir, "config.ini"))
         self.author = config.get("info", "author")
         self.path = config
 
