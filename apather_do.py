@@ -15,7 +15,7 @@ import ApatcherMenu as amenu
 import ApatcherUtils as autil
 import ApatcherGendocs as adoc
 
-__version__ = "0.8.6"
+__version__ = "0.9.0"
 debug_mode = True
 
 
