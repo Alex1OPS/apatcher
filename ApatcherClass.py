@@ -3,7 +3,7 @@ import os
 import subprocess
 import re
 import logging
-import fwpt_apatcher.ApatcherUtils as autil
+import ApatcherUtils as autil
 import sys
 import datetime
 
