@@ -1,6 +1,7 @@
 import glob
 import os
 import time
+import sys
 import logging
 import zipfile
 from fw_patches.Prepare import PatchPrepare
@@ -102,7 +103,7 @@ def make_patch_f(args):
         if not args:
             print ("Usage 'python Prepare.py [-Ssettings.conf] <template.sql> [re|<patch-number>|out <filename>]'")
     else:
-        p = PatchPrepare()
+        p = PatchPrepare(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), "cfg/settings.conf"))
 
     template = args[0]
     replace = None
