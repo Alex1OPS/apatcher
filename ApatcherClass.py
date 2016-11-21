@@ -9,6 +9,10 @@ import datetime
 
 logger = logging.getLogger(__name__)
 
+PATH_TO_IMG = "cfg/box_img.jpg"
+PATH_TO_TMPL = "cfg/_temp.sql"
+PATH_TO_CFG = "cfg/config.ini"
+
 class PatchBase:
     def __init__(self, author=None, date=None, num=None, ticket_num=None, objects_new=None, objects_mod=None,
                  objects_del=None, comment=None, files_list=None):
@@ -32,7 +36,7 @@ class PatchTemplate(PatchBase):
                            files_list)
         self.full = full
 
-    def take_from(self, path_to_file="cfg/_temp.sql"):
+    def take_from(self, path_to_file=PATH_TO_TMPL):
         try:
             with open(os.path.join(os.path.dirname(__file__), path_to_file), 'r') as fl:
                 file_data = fl.read()
@@ -157,8 +161,9 @@ class CfgInfo:
     def __init__(self, path=None, author=None):
         dir = os.path.dirname(os.path.realpath(sys.argv[0]))
         config = cfg.ConfigParser()
-        config.read(os.path.join(dir, "config.ini"))
-        logging.info(os.path.join(dir, "config.ini"))
+        pth_cfg = os.path.join(dir, PATH_TO_CFG)
+        config.read(pth_cfg)
+        logging.info("Path to cfg file {}".format(pth_cfg))
         self.author = config.get("info", "author")
         self.path = config
 
