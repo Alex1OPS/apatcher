@@ -236,37 +236,3 @@ class PatchPrintExt(PatchPrint):
         self.sdk_patches = sdk_patches
         self.base_patches = base_patches
         self.proj_patches = proj_patches
-
-
-def main():
-    # t = PatchPrint()
-    # t.parse_from_exists("*Автор:                Куртаков А.Е.  Дата:         "
-    #                     "        2016-07-05  Номер патча:          01614  Номер тикета:  "
-    #                     "       10801  Новые объекты:   Измененные объекты:   pack_bill  Удаленные объекты: "
-    #                     "     Комментарий:    "
-    #                     "      Скорректировано определение уровня логирования при массовом выставлении счетов "
-    #                     "(ускорено)  "
-    #                     "  Создан: 2016-07-05 11:45:08    Список включённых файлов: flexy-525019.sql,"
-    #                     " flexy-525051.sql, DIS_BASE_EXCHANGE.pck, DIS_SEARCH_INTERFACE.pck")
-    #
-    # print(t.name)
-    # print(t.list_files)
-    # print(t.description)
-    sarg_line = "{s:189-191,b:1617-1620,p:814-817}"
-    p1, p2, p3 = autil.parse_nums_patches_interval(sarg_line)
-    print(p1)
-    print(p2)
-    print(p3)
-    _, tr_sdk, tr_base, tr_proj = autil.get_all_patch_files_by_nums("D:\\FProjects\\database\\sdk\\database\\patches",
-                                                                    "D:\\FProjects\\database\\billing\\database\\patches",
-                                                                    "D:\\FProjects\\DISCOVERY\\patches",
-                                                                    p1,
-                                                                    p2,
-                                                                    p3)
-    print(tr_sdk)
-    print(tr_base)
-    print(tr_proj)
-
-
-if __name__ == "__main__":
-    main()

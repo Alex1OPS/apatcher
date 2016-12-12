@@ -342,22 +342,3 @@ def generate_doc_changelist(project_patches=None, base_patches=None, sdk_patches
         section.right_margin = Cm(margin)
 
     document.save('tmp//changelist.docx')
-
-
-def main():
-    generate_doc_upd_log("Богомолова А.В", "\\2016-01-01_05\\", "16 мая 2016 года", list_patch=["1.txt", "2.txt"])
-    generate_doc_changelist(project_patches=[ac.PatchPrintExt(name=str(x), description="Новый патч 2",
-                                                              list_files=["pacK_sdk.pck", "flexy-5252.sql",
-                                                                          "alma_dw.pck"])
-                                             for x in range(1, 9)],
-                            base_patches=[ac.PatchPrintExt(name=str(x), description="Новый патч 2",
-                                                           list_files=["pacK_sdk.pck", "flexy-5252.sql", "alma_dw.pck"])
-                                          for x in range(1, 20)],
-                            sdk_patches=[ac.PatchPrintExt(name=str(x), description="Новый патч 2",
-                                                          list_files=["pacK_sdk.pck", "flexy-5252.sql", "alma_dw.pck"])
-                                         for x in range(1, 4)]
-                            )
-
-
-if __name__ == "__main__":
-    main()

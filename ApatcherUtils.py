@@ -1,13 +1,13 @@
 import glob
+import logging
 import os
 import time
-import sys
-import logging
 import zipfile
-from fw_patches.Prepare import PatchPrepare
+from fw_patches2.module_prepare import prepare
 
 logger = logging.getLogger(__name__)
 zip_log_name = "archlogs.zip"
+
 
 # разбиение списка файлов на две категории - бд и веб
 def split_list_files(lmass):
@@ -95,26 +95,11 @@ def get_all_patch_files_by_nums(p_dir_sdk, p_dir_base, p_dir_proj, p_sdk=None, p
     fl_proj = sorted(list(set(fl_proj)))
     return fl_lst, fl_sdk, fl_base, fl_proj
 
+
 # вызов создания патча из fw_patches
 def make_patch_f(args):
-    if args[0][:2].upper() == '-S':
-        p = PatchPrepare(args[0][2:])
-        args = args[1:]
-        if not args:
-            print ("Usage 'python Prepare.py [-Ssettings.conf] <template.sql> [re|<patch-number>|out <filename>]'")
-    else:
-        p = PatchPrepare(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), "cfg/settings.conf"))
+    prepare(args)
 
-    template = args[0]
-    replace = None
-    forceOutput = None
-    if len(args) > 2:
-        assert args[1] == '-out', 'Invalid option. Required re or patch-number or out <filename>'
-        forceOutput = args[2]
-    elif len(args) > 1:
-        replace = args[1]
-
-    p.prepare_impl(template, replace, forceOutput)
 
 # периодическое сжатие логов
 def zip_old_logs(logdir, critdays=7):
@@ -125,7 +110,6 @@ def zip_old_logs(logdir, critdays=7):
     else:
         zarch = zipfile.ZipFile(os.path.join(logdir, zip_log_name), "a")
 
-
     for f in os.listdir(logdir):
         creation_time = os.path.getctime(os.path.join(logdir, f))
         if (current_time - creation_time) // (24 * 3600) >= int(critdays) and "main" not in f:
@@ -134,24 +118,3 @@ def zip_old_logs(logdir, critdays=7):
             logger.info('File {} replaced to zip log file.'.format(f))
             logger.info('File {} removed from log directory.'.format(f))
     return 0
-
-# тестирование
-def main():
-    # _, tr_sdk, tr_base, tr_proj = get_all_patch_files_by_nums("D:\\FProjects\\database\\sdk\\database\\patches",
-    #                                                           "D:\\FProjects\\database\\billing\\database\\patches",
-    #                                                           "D:\\FProjects\\DISCOVERY\\patches",
-    #                                                           [189, 190, 191],
-    #                                                           [1617, 1618, 1619, 1620],
-    #                                                           [31, 32, 33])
-    # print(tr_sdk)
-    # print(tr_base)
-    # print(tr_proj)
-
-    ls, lp, lk = parse_nums_patches_interval("[s:215-217,b:1691-1693,p:]")
-    print(ls)
-    print(lp)
-    print(lk)
-
-
-if __name__ == "__main__":
-    main()

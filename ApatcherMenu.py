@@ -71,14 +71,3 @@ def edit_files_list(new_lm=None, mod_lm=None, del_lm=None):
         del_lm = edit_list(lmass, choice)
 
     return new_lm, mod_lm, del_lm
-
-
-def main():
-    p = ["m1", "m2", "m3"]
-    p = edit_list(p, 1)
-    print(p)
-
-
-if __name__ == "__main__":
-    main()
-
