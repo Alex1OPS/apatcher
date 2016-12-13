@@ -1,19 +1,18 @@
 import argparse
+import configparser
 import datetime
 import locale
+import logging
 import os
 import sys
-import configparser
-import logging
-import time
 import threading
-
-from pymorphy2 import MorphAnalyzer
+import time
 
 import ApatcherClass as ac
+import ApatcherGendocs as adoc
 import ApatcherMenu as amenu
 import ApatcherUtils as autil
-import ApatcherGendocs as adoc
+from pymorphy2 import MorphAnalyzer
 
 __version__ = "0.9.2"
 debug_mode = True
@@ -99,8 +98,8 @@ def main():
         print(inst)
         exit(0)
 
-    #запусти параллельно сжатие логов
-    trd = threading.Thread(target=autil.zip_old_logs(log_dir,critdays=tcfg_arg.path.get("info", "loglife")))
+    # запусти параллельно сжатие логов
+    trd = threading.Thread(target=autil.zip_old_logs(log_dir, critdays=tcfg_arg.path.get("info", "loglife")))
     trd.start()
 
     # отобразим конфигурацию
@@ -141,6 +140,7 @@ def main():
         # соберем патч
         if namespace.nomake is False:
             b_sucs_making = fin_p.make_patch_fw(path_to_file=os.path.join(path_dir, "patch-template/template.sql"),
+                                                root_path=path_dir,
                                                 fwoption=namespace.fwopt)
             if b_sucs_making is True:
                 print("Making patch -> Success")
@@ -164,7 +164,7 @@ def main():
             # сгенерируем доки
             adoc.generate_doc_changelist(project_patches=[proj_patch for x in range(0, 1)])
             adoc.generate_doc_upd_log(author_name=tcfg_arg.author,
-                                      list_patch=[proj_patch.full_name for x in range(0,1)],
+                                      list_patch=[proj_patch.full_name for x in range(0, 1)],
                                       dir_name=namespace.dir,
                                       date_d=dt_str_make)
     else:
@@ -205,8 +205,8 @@ def main():
                                      sdk_patches=sdk_patches)
 
     elapsed_time = time.time() - start_exec_time
-    print("Runtime: {0} sec".format(round(elapsed_time,3)))
-    logging.info("Runtime: {0} sec".format(round(elapsed_time,3)))
+    print("Runtime: {0} sec".format(round(elapsed_time, 3)))
+    logging.info("Runtime: {0} sec".format(round(elapsed_time, 3)))
 
 
 if __name__ == "__main__":

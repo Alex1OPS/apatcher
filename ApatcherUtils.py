@@ -1,8 +1,10 @@
 import glob
 import logging
 import os
+import sys
 import time
 import zipfile
+
 from fw_patches2.module_prepare import prepare
 
 logger = logging.getLogger(__name__)
@@ -98,7 +100,13 @@ def get_all_patch_files_by_nums(p_dir_sdk, p_dir_base, p_dir_proj, p_sdk=None, p
 
 # вызов создания патча из fw_patches
 def make_patch_f(args):
-    prepare(args)
+    print(args)
+    # изменим окружение
+    old_sys_argv = sys.argv
+    sys.argv = [old_sys_argv[0]] + args
+    prepare()
+    # вернём как было
+    sys.argv = old_sys_argv
 
 
 # периодическое сжатие логов

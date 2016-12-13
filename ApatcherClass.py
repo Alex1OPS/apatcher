@@ -1,17 +1,18 @@
 import configparser as cfg
+import datetime
+import logging
 import os
 import subprocess
-import re
-import logging
-import ApatcherUtils as autil
 import sys
-import datetime
+
+import ApatcherUtils as autil
 
 logger = logging.getLogger(__name__)
 
 PATH_TO_IMG = "cfg/box_img.jpg"
 PATH_TO_TMPL = "cfg/_temp.sql"
 PATH_TO_CFG = "cfg/config.ini"
+
 
 class PatchBase:
     def __init__(self, author=None, date=None, num=None, ticket_num=None, objects_new=None, objects_mod=None,
@@ -80,20 +81,22 @@ class Patch(PatchBase):
             return False
 
     @staticmethod
-    def make_patch_fw(path_to_file, fwoption):
+    def make_patch_fw(path_to_file, root_path, fwoption):
         dt_str = datetime.datetime.now().strftime("back\\%Y%m%d_%H_%M_%S_fwlog.log")
         orig_stdout = sys.stdout
         f = open(dt_str, 'w+')
         sys.stdout = f
 
-        autil.make_patch_f(args=[path_to_file, fwoption])
+        autil.make_patch_f(args=['--ui', '--template={}'.format(path_to_file), '--root={}'.format(root_path)])
 
         sys.stdout = orig_stdout
         f.close()
         # получим последнюю строку файла с оценкой в 100 символов для получение статуса патча
+        # магические числа плохо, но тут так норм :)
         f = open(dt_str, 'rb')
         f.seek(-100, 2)
-        last = f.readlines()[-1].decode()
+        last = f.readlines()[-5].decode()
+        print(last)
         f.close()
 
         if "DONE" in last:
@@ -188,20 +191,28 @@ class PatchPrint:
         self.full_name = full_name
 
     def parse_from_exists(self, full_txt="", full_name=""):
-        remap = {ord('\t') : None, ord('\f') : None, ord('\r') : None}
+        remap = {ord('\t'): None, ord('\f'): None, ord('\r'): None}
         num_patch = 0
 
         try:
-            author = full_txt[full_txt.find("Автор:") + len("Автор") : full_txt.find("Дата:")].strip(" :\n").translate(remap)
-            num_patch = full_txt[full_txt.find("Номер патча:") + len("Номер патча") : full_txt.find("Номер тикета:")].strip(" :\n").translate(remap)
-            descr = full_txt[full_txt.find("Комментарий:") + len("Комментарий") : full_txt.find("Создан:")].strip(" :\n").replace("\n", "").translate(remap)
+            author = full_txt[full_txt.find("Автор:") + len("Автор"): full_txt.find("Дата:")].strip(" :\n").translate(
+                remap)
+            num_patch = full_txt[
+                        full_txt.find("Номер патча:") + len("Номер патча"): full_txt.find("Номер тикета:")].strip(
+                " :\n").translate(remap)
+            descr = full_txt[full_txt.find("Комментарий:") + len("Комментарий"): full_txt.find("Создан:")].strip(
+                " :\n").replace("\n", "").translate(remap)
             if full_txt.find("Создан:") != -1 and full_txt.find("Список включённых файлов:") != -1:
-                list_files = full_txt[full_txt.find("Список включённых файлов:") + len("Список включённых файлов") : len(full_txt)].strip(" :\n").translate(remap)
+                list_files = full_txt[full_txt.find("Список включённых файлов:") + len("Список включённых файлов"): len(
+                    full_txt)].strip(" :\n").translate(remap)
                 lst_files = [x.strip(" ") for x in (list_files.lstrip(":")).split(",")]
             else:
-                new_files = full_txt[full_txt.find("Новые объекты:") + len("Новые объекты") : full_txt.find("Измененные объекты:")].strip(" :\n").translate(remap)
-                change_files = full_txt[full_txt.find("Измененные объекты:") + len("Измененные объекты") : full_txt.find("Удаленные объекты:")].strip(" :\n").translate(remap)
-                del_files = full_txt[full_txt.find("Удаленные объекты:") + len("Удаленные объекты") : full_txt.find("Комментарий:")].strip(" :\n").translate(remap)
+                new_files = full_txt[full_txt.find("Новые объекты:") + len("Новые объекты"): full_txt.find(
+                    "Измененные объекты:")].strip(" :\n").translate(remap)
+                change_files = full_txt[full_txt.find("Измененные объекты:") + len("Измененные объекты"): full_txt.find(
+                    "Удаленные объекты:")].strip(" :\n").translate(remap)
+                del_files = full_txt[full_txt.find("Удаленные объекты:") + len("Удаленные объекты"): full_txt.find(
+                    "Комментарий:")].strip(" :\n").translate(remap)
                 list_files = new_files + change_files + del_files
                 lst_files = [x.strip(" ") for x in (list_files.lstrip(":")).split(",")]
 
