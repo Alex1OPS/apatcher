@@ -41,6 +41,8 @@ def create_parser():
     parent_group.add_argument("-t", "--text", default="Empty comment line", help="Текст комментария к коммиту")
     parent_group.add_argument("-e", "--edit", action='store_true', default=False,
                               help="Флаг редактирования списка файлов")
+    parent_group.add_argument("-m", "--make", action='store_true', default=False,
+                              help="Только создание патча")
     parent_group.add_argument("-h", "--help", action="help", help="Справка")
     parent_group.add_argument("--version",
                               action="version",
@@ -134,11 +136,12 @@ def main():
         fin_p.full = ptch_tmp.full
 
         # запишем template.sql для патча
-        fin_p.prepare(proj_name=namespace.project)
-        fin_p.save(path_to_file=os.path.join(path_dir, "patch-template/template.sql"))
+        if namespace.make is False:
+            fin_p.prepare(proj_name=namespace.project)
+            fin_p.save(path_to_file=os.path.join(path_dir, "patch-template/template.sql"))
 
         # соберем патч
-        if namespace.nomake is False:
+        if namespace.nomake is False or namespace.make is True:
             b_sucs_making = fin_p.make_patch_fw(path_to_file=os.path.join(path_dir, "patch-template/template.sql"),
                                                 root_path=path_dir,
                                                 fwoption=namespace.fwopt)
