@@ -14,7 +14,7 @@ import ApatcherMenu as amenu
 import ApatcherUtils as autil
 from pymorphy2 import MorphAnalyzer
 
-__version__ = "0.9.2"
+__version__ = "0.9.4"
 debug_mode = True
 
 

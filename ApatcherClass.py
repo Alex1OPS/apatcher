@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 PATH_TO_IMG = "cfg/box_img.jpg"
 PATH_TO_TMPL = "cfg/_temp.sql"
 PATH_TO_CFG = "cfg/config.ini"
+WARNING_MSG_DELIMITER = ">>>"
 
 
 class PatchBase:
@@ -205,6 +206,10 @@ class PatchPrint:
             if full_txt.find("Создан:") != -1 and full_txt.find("Список включённых файлов:") != -1:
                 list_files = full_txt[full_txt.find("Список включённых файлов:") + len("Список включённых файлов"): len(
                     full_txt)].strip(" :\n").translate(remap)
+                # удалим возможно предупреждение в шапке
+                p_delim_place = list_files.find(WARNING_MSG_DELIMITER)
+                if p_delim_place != -1:
+                    list_files = list_files[:p_delim_place]
                 lst_files = [x.strip(" ") for x in (list_files.lstrip(":")).split(",")]
             else:
                 new_files = full_txt[full_txt.find("Новые объекты:") + len("Новые объекты"): full_txt.find(
