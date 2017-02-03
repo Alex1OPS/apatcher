@@ -5,7 +5,7 @@ import locale
 import logging
 import os
 import sys
-import threading
+import json
 import time
 
 import ApatcherClass as ac
@@ -29,6 +29,7 @@ def create_parser():
     # группа параметров
     parent_group = parser.add_argument_group(title="Параметры")
     parent_group.add_argument("-p", "--project", help="Проект")
+    parent_group.add_argument("-k", "--manual", help="Жесткая передача всех данных для формирования")
     parent_group.add_argument("-c", "--commit", action='store_true', default=False, help="Флаг коммита после сборки")
     parent_group.add_argument("-n", "--nomake", action='store_true', default=False, help="Флаг сборки патча")
     parent_group.add_argument("-d", "--docs", action='store_true', default=False,
@@ -82,6 +83,20 @@ def main():
     logging.info(sys.argv)
 
     try:
+        # если ручной режим, то парсим полученный json
+        data = []
+        if namespace.manual is not None:
+            with open(namespace.manual) as data_file:
+                data = json.load(data_file)
+            namespace.project = data['project']
+            namespace.text = data['comment']
+            namespace.docs = data['with_docs']
+    except Exception as inst:
+        logging.error("I couldn't find json file {0} in manual mode: {1}".format(namespace.manual, inst))
+        print(inst)
+        exit(0)
+
+    try:
         tcfg_arg = ac.CfgInfo()
         if namespace.project:
             path_dir = tcfg_arg.path.get("projects_path", namespace.project)
@@ -101,8 +116,8 @@ def main():
         exit(0)
 
     # запусти параллельно сжатие логов
-    trd = threading.Thread(target=autil.zip_old_logs(log_dir, critdays=tcfg_arg.path.get("info", "loglife")))
-    trd.start()
+    # trd = threading.Thread(target=autil.zip_old_logs(log_dir, critdays=tcfg_arg.path.get("info", "loglife")))
+    # trd.start()
 
     # отобразим конфигурацию
     if debug_mode is True:
@@ -122,16 +137,21 @@ def main():
                                                                           del_lm=objects_del)
         list_files = [] + objects_new + objects_mod
 
+        # если ручной режим
+        if namespace.manual is not None:
+            objects_new = objects_del = []
+            list_files = objects_mod = data['patch_files']
+
         # получим template sql для патча
         ptch_tmp = ac.PatchTemplate()
         ptch_tmp.take_from()
 
         # разберем статусы объектов репо по полям патча
         fin_p = ac.Patch(author=tcfg_arg.author)
+        fin_p.comment = namespace.text
         fin_p.objects_new = ", ".join([p.rsplit("\\", 1)[-1] for p in objects_new])
         fin_p.objects_mod = ", ".join([p.rsplit("\\", 1)[-1] for p in objects_mod])
         fin_p.objects_del = ", ".join([p.rsplit("\\", 1)[-1] for p in objects_del])
-        fin_p.comment = namespace.text
         fin_p.files_list = "\n".join(["@@ " + p for p in list_files])
         fin_p.full = ptch_tmp.full
 
