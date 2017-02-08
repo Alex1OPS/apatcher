@@ -86,11 +86,13 @@ def main():
         # если ручной режим, то парсим полученный json
         data = []
         if namespace.manual is not None:
-            with open(namespace.manual) as data_file:
+            with open(namespace.manual, encoding="utf-8") as data_file:
                 data = json.load(data_file)
             namespace.project = data['project']
             namespace.text = data['comment']
             namespace.docs = data['with_docs']
+            if namespace.docs is True:
+                namespace.dir = data['dirprep']
     except Exception as inst:
         logging.error("I couldn't find json file {0} in manual mode: {1}".format(namespace.manual, inst))
         print(inst)

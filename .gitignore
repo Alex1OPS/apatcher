@@ -49,3 +49,9 @@ __pycache__/ApatcherClass.cpython-35.pyc
 *.dfw
 tmp/sub_level_items_2.docx
 tmp/top_level_items.docx
+*.log
+*.xml
+*.bin
+*.xml
+*.zip
+*.whl
