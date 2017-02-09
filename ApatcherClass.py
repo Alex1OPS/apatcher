@@ -51,6 +51,7 @@ class PatchTemplate(PatchBase):
 class Patch(PatchBase):
     name = None
     full = None
+    before_script = None
 
     def prepare(self, proj_name="Default"):
         self.name = proj_name
@@ -62,6 +63,8 @@ class Patch(PatchBase):
         self.full = self.full.replace("__comment_body__", self.comment)
         self.full = self.full.replace("__list_objs__", self.files_list)
         self.full = self.full.replace("__project__", self.name)
+        self.full = self.full.replace("__before_script__", self.before_script)
+
 
     def save(self, path_to_file):
         with open(path_to_file, 'w') as fl:

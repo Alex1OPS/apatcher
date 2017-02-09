@@ -14,6 +14,7 @@
 
 */
 
+__before_script__
 
 __list_objs__
 /

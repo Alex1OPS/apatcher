@@ -14,7 +14,7 @@ import ApatcherMenu as amenu
 import ApatcherUtils as autil
 from pymorphy2 import MorphAnalyzer
 
-__version__ = "0.9.4"
+__version__ = "0.9.7"
 debug_mode = True
 
 
@@ -93,6 +93,7 @@ def main():
             namespace.docs = data['with_docs']
             if namespace.docs is True:
                 namespace.dir = data['dirprep']
+            namespace.before_script = data['scripts']
     except Exception as inst:
         logging.error("I couldn't find json file {0} in manual mode: {1}".format(namespace.manual, inst))
         print(inst)
@@ -156,6 +157,7 @@ def main():
         fin_p.objects_del = ", ".join([p.rsplit("\\", 1)[-1] for p in objects_del])
         fin_p.files_list = "\n".join(["@@ " + p for p in list_files])
         fin_p.full = ptch_tmp.full
+        fin_p.before_script = namespace.before_script
 
         # запишем template.sql для патча
         if namespace.make is False:
