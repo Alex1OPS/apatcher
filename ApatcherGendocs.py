@@ -7,6 +7,7 @@ from docx.shared import Inches
 from docx.shared import Cm
 from docx.enum.table import WD_TABLE_ALIGNMENT
 import ApatcherClass as ac
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -175,7 +176,8 @@ def generate_doc_upd_log(author_name="Default", dir_name="\\0000-00-00_00\\", da
         section.left_margin = Cm(2 * margin)
         section.right_margin = Cm(margin)
 
-    document.save('tmp//update_log.docx')
+    document.save('tmp\\update_log.docx')
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp\\update_log.docx')
 
 
 # Функция генерации changelist.docx
@@ -341,4 +343,5 @@ def generate_doc_changelist(project_patches=None, base_patches=None, sdk_patches
         section.left_margin = Cm(2 * margin)
         section.right_margin = Cm(margin)
 
-    document.save('tmp//changelist.docx')
+    document.save('tmp\\changelist.docx')
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp\\changelist.docx')

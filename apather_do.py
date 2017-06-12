@@ -1,20 +1,21 @@
 import argparse
 import configparser
 import datetime
+import json
 import locale
 import logging
 import os
 import sys
-import json
 import time
+
+from pymorphy2 import MorphAnalyzer
 
 import ApatcherClass as ac
 import ApatcherGendocs as adoc
 import ApatcherMenu as amenu
 import ApatcherUtils as autil
-from pymorphy2 import MorphAnalyzer
 
-__version__ = "0.9.7"
+__version__ = "0.9.8"
 debug_mode = True
 
 
@@ -44,6 +45,8 @@ def create_parser():
                               help="Флаг редактирования списка файлов")
     parent_group.add_argument("-m", "--make", action='store_true', default=False,
                               help="Только создание патча")
+    parent_group.add_argument("--customer", action='store_true', default=False,
+                              help="Подготовить к передаче заказчику")
     parent_group.add_argument("-h", "--help", action="help", help="Справка")
     parent_group.add_argument("--version",
                               action="version",
@@ -93,6 +96,7 @@ def main():
             namespace.docs = data['with_docs']
             if namespace.docs is True:
                 namespace.dir = data['dirprep']
+                namespace.customer = True
             namespace.before_script = data['scripts']
     except Exception as inst:
         logging.error("I couldn't find json file {0} in manual mode: {1}".format(namespace.manual, inst))
@@ -130,6 +134,9 @@ def main():
         print("  Without making patch -> {}".format(str(namespace.nomake)))
         print("  Commit changes -> {}".format(str(namespace.commit)))
         print("  Create docs (patch mode) -> {}".format(str(namespace.docs)))
+        print("  With preparing for transferring to customer -> {}".format(str(namespace.customer)))
+
+    transfer_objects = {"base": [], "sdk": [], "project": []}
 
     if namespace.only is False:
         # получим статусы объектов в репо
@@ -188,12 +195,14 @@ def main():
             proj_patch.parse_from_exists(autil.get_patch_top_txt(objects_new_p[0]),
                                          full_name=str(objects_new_p[0]).split("\\")[-1])
 
+            transfer_objects["project"] = objects_new_p[0]
+
             # сгенерируем доки
-            adoc.generate_doc_changelist(project_patches=[proj_patch for x in range(0, 1)])
-            adoc.generate_doc_upd_log(author_name=tcfg_arg.author,
-                                      list_patch=[proj_patch.full_name for x in range(0, 1)],
-                                      dir_name=namespace.dir,
-                                      date_d=dt_str_make)
+            changelist_file = adoc.generate_doc_changelist(project_patches=[proj_patch for x in range(0, 1)])
+            updatelog_file = adoc.generate_doc_upd_log(author_name=tcfg_arg.author,
+                                                       list_patch=[proj_patch.full_name for x in range(0, 1)],
+                                                       dir_name=namespace.dir,
+                                                       date_d=dt_str_make)
     else:
         # только генерируем документы по патчам, указанным в папке cfg
         p_sdk, p_base, p_proj = autil.parse_nums_patches_interval(namespace.anum)
@@ -203,6 +212,11 @@ def main():
                                                                              p_sdk,
                                                                              p_base,
                                                                              p_proj)
+
+        transfer_objects["project"] = tf_proj
+        transfer_objects["base"] = tf_base
+        transfer_objects["sdk"] = tf_sdk
+
         # соберём классы по каждому патчу
         sdk_patches = []
         for x in tf_sdk:
@@ -226,10 +240,16 @@ def main():
         tf_all = [x.split("\\")[-1] for x in tf_all]
 
         # сформируем доки
-        adoc.generate_doc_upd_log(tcfg_arg.author, namespace.dir, dt_str_make, list_patch=tf_all)
-        adoc.generate_doc_changelist(project_patches=proj_patches,
+        updatelog_file = adoc.generate_doc_upd_log(tcfg_arg.prepauthor, namespace.dir, dt_str_make, list_patch=tf_all)
+        changelist_file = adoc.generate_doc_changelist(project_patches=proj_patches,
                                      base_patches=base_patches,
                                      sdk_patches=sdk_patches)
+
+    if namespace.customer:
+        autil.prepare_transferring_customer(lconf=tcfg_arg,
+                                            transfer_objects=transfer_objects,
+                                            ldir=namespace.dir,
+                                            docs=[updatelog_file, changelist_file])
 
     elapsed_time = time.time() - start_exec_time
     print("Runtime: {0} sec".format(round(elapsed_time, 3)))

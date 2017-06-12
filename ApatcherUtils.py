@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import zipfile
+import shutil
 
 from fw_patches2.module_prepare import prepare
 
@@ -75,19 +76,19 @@ def get_all_patch_files_by_nums(p_dir_sdk, p_dir_base, p_dir_proj, p_sdk=None, p
     # начнем обход папок для поиска патчей
     if p_dir_sdk != "":
         for p in p_sdk:
-            xname = p_dir_sdk + "\\**\\*{0}.sql".format(str(p))
+            xname = p_dir_sdk + "\\**\\*_*{0}.sql".format(str(p))
             lst_tm = glob.glob(xname, recursive=True)
             fl_lst += lst_tm
             fl_sdk += lst_tm
     if p_dir_base != "":
         for p in p_base:
-            xname = p_dir_base + "\\**\\*{0}.sql".format(str(p))
+            xname = p_dir_base + "\\**\\*_*{0}.sql".format(str(p))
             lst_tm = glob.glob(xname, recursive=True)
             fl_lst += lst_tm
             fl_base += lst_tm
     if p_dir_proj != "":
         for p in p_proj:
-            xname = p_dir_proj + "\\**\\*{0}.sql".format(str(p))
+            xname = p_dir_proj + "\\**\\*_*{0}.sql".format(str(p))
             lst_tm = glob.glob(xname, recursive=True)
             fl_lst += lst_tm
             fl_proj += lst_tm
@@ -95,6 +96,7 @@ def get_all_patch_files_by_nums(p_dir_sdk, p_dir_base, p_dir_proj, p_sdk=None, p
     fl_sdk = sorted(list(set(fl_sdk)))
     fl_base = sorted(list(set(fl_base)))
     fl_proj = sorted(list(set(fl_proj)))
+    logger.debug("Get files sdk:\n{0};\nbase:\n{1};\nproject:\n{2}\n".format(fl_sdk, fl_base, fl_proj))
     return fl_lst, fl_sdk, fl_base, fl_proj
 
 
@@ -126,3 +128,33 @@ def zip_old_logs(logdir, critdays=7):
             logger.info('File {} replaced to zip log file.'.format(f))
             logger.info('File {} removed from log directory.'.format(f))
     return 0
+
+
+# копирование файлов в папку
+def copy_patches_to_dir(ldir, lpatches):
+    if len(lpatches) == 0:
+        return
+    os.makedirs(ldir)
+    for x in lpatches:
+        dist = os.path.join(ldir, x.split("\\")[-1])
+        shutil.copyfile(x, dist)
+
+# подготовка файлов к передаче
+def prepare_transferring_customer(lconf, transfer_objects, ldir, docs):
+    root_dir = lconf.customer_path["prepare_dir"]
+    if not os.path.isdir(root_dir):
+        logger.info("Customer directory not exists -> Create directory {}".format(root_dir))
+        os.makedirs(root_dir)
+
+    target_dir = os.path.join(root_dir, ldir)
+    if os.path.exists(target_dir):
+        logger.warning("{} directory found -> Overwriting".format(target_dir))
+        shutil.rmtree(target_dir)
+    os.makedirs(target_dir)
+
+    for dir_key in transfer_objects.keys():
+        copy_patches_to_dir(os.path.join(target_dir, lconf.customer_path[dir_key]), transfer_objects[dir_key])
+
+    logger.info("Copying patch documents ...")
+    copy_patches_to_dir(os.path.join(target_dir, lconf.customer_path["docs"]), docs)
+    logger.info("Customer directory {} was successfully prepared".format(target_dir))

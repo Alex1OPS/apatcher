@@ -163,7 +163,9 @@ class RepoJob:
 
 class CfgInfo:
     author = None
+    prepauthor = None
     path = None
+    customer_path = {"prepare_dir": None, "sdk": None, "base": None, "project": None, "docs": None}
 
     def __init__(self, path=None, author=None):
         dir = os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -172,7 +174,11 @@ class CfgInfo:
         config.read(pth_cfg)
         logging.info("Path to cfg file {}".format(pth_cfg))
         self.author = config.get("info", "author")
+        self.prepauthor = config.get("info", "prepauthor")
         self.path = config
+        # структура подготовки папки обновлений
+        for xkey in self.customer_path.keys():
+            self.customer_path[xkey] = config.get("customer_folder", xkey)
 
 
 class PatchPrint:
