@@ -96,7 +96,7 @@ def main():
             namespace.docs = data['with_docs']
             namespace.only = data['only_docs']
             if namespace.docs is True or namespace.only:
-                namespace.dir = data['dirprep']
+                namespace.dir = data['dirprep'].strip("/")
                 namespace.customer = data['prep_customer']
                 namespace.anum = data['prepdocs']
             namespace.before_script = data['scripts']

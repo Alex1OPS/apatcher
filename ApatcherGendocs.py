@@ -177,7 +177,7 @@ def generate_doc_upd_log(author_name="Default", dir_name="\\0000-00-00_00\\", da
         section.right_margin = Cm(margin)
 
     document.save('tmp\\update_log.docx')
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp\\update_log.docx')
+    return 'tmp\\update_log.docx'
 
 
 # Функция генерации changelist.docx
@@ -344,4 +344,4 @@ def generate_doc_changelist(project_patches=None, base_patches=None, sdk_patches
         section.right_margin = Cm(margin)
 
     document.save('tmp\\changelist.docx')
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tmp\\changelist.docx')
+    return 'tmp\\changelist.docx'
