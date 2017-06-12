@@ -94,9 +94,11 @@ def main():
             namespace.project = data['project']
             namespace.text = data['comment']
             namespace.docs = data['with_docs']
-            if namespace.docs is True:
+            namespace.only = data['only_docs']
+            if namespace.docs is True or namespace.only:
                 namespace.dir = data['dirprep']
-                namespace.customer = True
+                namespace.customer = data['prep_customer']
+                namespace.anum = data['prepdocs']
             namespace.before_script = data['scripts']
     except Exception as inst:
         logging.error("I couldn't find json file {0} in manual mode: {1}".format(namespace.manual, inst))

@@ -1,0 +1,13 @@
+{
+    "author": "Богомолов А.В.",
+    "comment": "",
+    "dirprep": "/2021-210-22/",
+    "only_docs": true,
+    "patch_files": [
+    ],
+    "prep_customer": true,
+    "prepdocs": "[s:240-249,b:1840-1850,p:41]",
+    "project": "MAC",
+    "scripts": "",
+    "with_docs": true
+}
