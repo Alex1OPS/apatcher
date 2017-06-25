@@ -132,6 +132,7 @@ class RepoJob:
         obj_new = []
         obj_mod = []
         obj_del = []
+        obj_unchecked = []
         # разберем статусы файла, полученные из svn status
         for ptr in status_mass:
             try:
@@ -148,7 +149,9 @@ class RepoJob:
                 obj_new.append(ptr[1:].lstrip())
             elif ptr[:1] == 'D':
                 obj_del.append(ptr[1:].lstrip())
-        return obj_new, obj_mod, obj_del
+            else:
+                obj_unchecked.append(ptr[1:].lstrip())
+        return obj_new, obj_mod, obj_del, obj_unchecked
 
     # отправка коммита
     def send_commit(self, comment_line):
