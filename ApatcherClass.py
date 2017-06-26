@@ -65,7 +65,6 @@ class Patch(PatchBase):
         self.full = self.full.replace("__project__", self.name)
         self.full = self.full.replace("__before_script__", self.before_script)
 
-
     def save(self, path_to_file):
         with open(path_to_file, 'w') as fl:
             fl.write(self.full)

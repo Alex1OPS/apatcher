@@ -1,5 +1,6 @@
 import configparser as cfg
 import datetime as dt
+import logging
 import sys
 
 from PyQt5.QtCore import Qt
@@ -9,6 +10,8 @@ from PyQt5.uic import loadUi
 
 import ApatcherClass as ac
 import apather_do as ado
+
+logger = logging.getLogger(__name__)
 
 
 class CfgInfo:
@@ -47,27 +50,27 @@ class SettingNamespace:
 
     # печать состава namespace пользователя
     def print_namespace_composition(self):
-        print(("User namespace consists of:\n" +
-               "manual = {manual}\nproject = {project}\ntext = {text}\ndocs = {docs}\nonly = {only}\n" +
-               "dir = {dir}\ncustomer = {customer}\nanum = {anum}\nbefore_scripts = {befscripts}\n" +
-               "patch_files = {patchfiles}\nnomake = {nomake}\nmake = {make}").format(manual=self.manual,
-                                                                                      project=self.project,
-                                                                                      text=self.text,
-                                                                                      docs=self.docs, only=self.only,
-                                                                                      dir=self.dir,
-                                                                                      customer=self.customer,
-                                                                                      anum=self.anum,
-                                                                                      befscripts=self.before_script,
-                                                                                      patchfiles=self.patch_files,
-                                                                                      nomake=self.nomake,
-                                                                                      make=self.make)
-              )
+        return (("User namespace consists of:\n" +
+                 "manual = {manual}\nproject = {project}\ntext = {text}\ndocs = {docs}\nonly = {only}\n" +
+                 "dir = {dir}\ncustomer = {customer}\nanum = {anum}\nbefore_scripts = {befscripts}\n" +
+                 "patch_files = {patchfiles}\nnomake = {nomake}\nmake = {make}").format(manual=self.manual,
+                                                                                        project=self.project,
+                                                                                        text=self.text,
+                                                                                        docs=self.docs, only=self.only,
+                                                                                        dir=self.dir,
+                                                                                        customer=self.customer,
+                                                                                        anum=self.anum,
+                                                                                        befscripts=self.before_script,
+                                                                                        patchfiles=self.patch_files,
+                                                                                        nomake=self.nomake,
+                                                                                        make=self.make)
+                )
 
 
 class PguiApatcherWindow(QMainWindow):
     user_config = None
     current_project = None
-    current_proj_path = None
+    current_proj_path = ""
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -139,9 +142,11 @@ class PguiApatcherWindow(QMainWindow):
             self.tableFiles.item(0, 1).setFlags(Qt.ItemIsSelectable)
 
     def addRow(self):
+        options = QFileDialog.Options()
         dlg = QFileDialog()
-        filenames = dlg.getOpenFileNames("Добавить файлы к патчу", "", "All files (*)", options=None)
-        self.refreshFilesRows(filenames[0])
+        filenames = dlg.getOpenFileNames(self, "Добавить файлы к патчу", self.current_proj_path, "All files (*)",
+                                         options=options)
+        self.refreshFilesRows([x.replace("/", "\\") for x in filenames[0]])
 
     def getRepoFiles(self):
         current_proj_path = self.current_proj_path
@@ -175,6 +180,15 @@ class PguiApatcherWindow(QMainWindow):
             self.lineDirToPass.setReadOnly(True)
 
     def cancel_current_set(self):
+        self.tableFiles.clearContents()
+        self.tableFiles.setRowCount(0)
+        self.lineDirToPass.setText("")
+        self.lineDirToPass.setDisabled(True)
+        self.lineDirToPass.setReadOnly(True)
+        self.checkBoxWithFiles.setChecked(False)
+        self.checkBoxPrepareCustomer.setChecked(False)
+        self.textComment.clear()
+        self.textBeforeFiles.clear()
         self.setDefaultEnv()
 
     def get_tab_files_content(self, process_col=0):
@@ -207,6 +221,7 @@ class PguiApatcherWindow(QMainWindow):
         user_space_set.patch_files = self.get_tab_files_content()
         user_space_set.fwopt = None
 
+        logging.info("User namespace:{}".format(user_space_set.print_namespace_composition()))
         ado.generate_process_doc_patch(user_space_set)
 
         self.progressBar.setValue(100)

@@ -16,7 +16,14 @@ import ApatcherMenu as amenu
 import ApatcherUtils as autil
 
 __version__ = "0.9.9"
-debug_mode = True
+debug_mode = False
+
+logging.basicConfig(filename="back/ct_main.log",
+                    level=logging.INFO,
+                    format='[%(asctime)s][%(levelname)s] %(message)s',
+                    datefmt='%m/%d/%Y %I:%M:%S',
+                    filemode="a+")
+locale.setlocale(locale.LC_ALL, "ru")
 
 
 # Не будем городить класс для парсера, т.к. argparse создает его внутри методов.
@@ -61,8 +68,13 @@ def generate_process_doc_patch(namespace):
     # текущая дата в виде строки
     dt_make = datetime.date.today()
     # получим месяц в родительном падеже
-    # TODO morph не работает под qt. Нужно придумать обходной путь
-    dt_str_make = dt_make.strftime(u"%d " + morph.parse(dt_make.strftime(u"%B"))[0].inflect({'gent'}).word + " %Y")
+    dt_str_make = ""
+    try:
+        dt_str_make = dt_make.strftime(u"%d " + morph.parse(dt_make.strftime(u"%B"))[0].inflect({'gent'}).word + " %Y")
+    except Exception as e:
+        logging.error(e)
+        logging.info(dt_str_make)
+        exit(0)
 
     tcfg_arg = None
     path_dir = None
@@ -125,9 +137,8 @@ def generate_process_doc_patch(namespace):
         fin_p.before_script = namespace.before_script
 
         # запишем template.sql для патча
-        if namespace.make is False:
-            fin_p.prepare(proj_name=namespace.project)
-            fin_p.save(path_to_file=os.path.join(path_dir, "patch-template/template.sql"))
+        fin_p.prepare(proj_name=namespace.project)
+        fin_p.save(path_to_file=os.path.join(path_dir, "patch-template/template.sql"))
 
         # соберем патч
         if namespace.nomake is False or namespace.make is True:
@@ -147,17 +158,18 @@ def generate_process_doc_patch(namespace):
         if namespace.docs is True and namespace.nomake is False:
             # получим статус репо - ожидаем там увидеть патч
             ts_rp_patch = ac.RepoJob(path_dir=path_dir + "\\patches")
-            objects_new_p, objects_mod_p, objects_del_p = ts_rp_patch.parse_status(ts_rp_patch.get_status(),
-                                                                                   b_patch=True)
+            objects_new_p, objects_mod_p, objects_del_p, objects_unch_p = ts_rp_patch.parse_status(
+                ts_rp_patch.get_status(),
+                b_patch=True)
             proj_patch = ac.PatchPrint()
             proj_patch.parse_from_exists(autil.get_patch_top_txt(objects_new_p[0]),
                                          full_name=str(objects_new_p[0]).split("\\")[-1])
 
-            transfer_objects["project"] = objects_new_p[0]
+            transfer_objects["project"] = [objects_new_p[0]]
 
             # сгенерируем доки
             changelist_file = adoc.generate_doc_changelist(project_patches=[proj_patch])
-            updatelog_file = adoc.generate_doc_upd_log(author_name=tcfg_arg.author,
+            updatelog_file = adoc.generate_doc_upd_log(author_name=tcfg_arg.prepauthor,
                                                        list_patch=[proj_patch.full_name],
                                                        dir_name=namespace.dir,
                                                        date_d=dt_str_make)
@@ -219,13 +231,6 @@ def main():
     if not os.path.exists(tmp_dir):
         os.makedirs(tmp_dir)
 
-    logging.basicConfig(filename="back/ct_main.log",
-                        level=logging.INFO,
-                        format='[%(asctime)s][%(levelname)s] %(message)s',
-                        datefmt='%m/%d/%Y %I:%M:%S',
-                        filemode="a+")
-    locale.setlocale(locale.LC_ALL, "ru")
-
     # получим аргументы командной строки
     parser = create_parser()
     namespace = parser.parse_args(sys.argv[1:])
@@ -246,6 +251,8 @@ def main():
                 namespace.anum = data['prepdocs']
             namespace.before_script = data['scripts']
             namespace.patch_files = data['patch_files']
+        else:
+            namespace.before_script = ""
     except Exception as inst:
         logging.error("I couldn't find json file {0} in manual mode: {1}".format(namespace.manual, inst))
         print(inst)

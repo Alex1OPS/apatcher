@@ -135,9 +135,11 @@ def copy_patches_to_dir(ldir, lpatches):
     if len(lpatches) == 0:
         return
     os.makedirs(ldir)
+
     for x in lpatches:
         dist = os.path.join(ldir, x.split("\\")[-1])
         shutil.copyfile(x, dist)
+
 
 # подготовка файлов к передаче
 def prepare_transferring_customer(lconf, transfer_objects, ldir, docs):
