@@ -241,10 +241,10 @@
                         </item>
                         <item row="4" column="0">
                             <layout class="QGridLayout" name="gridLayout_5">
-                                <item row="1" column="1">
-                                    <widget class="QPushButton" name="pushStart">
+                                <item row="3" column="1">
+                                    <widget class="QPushButton" name="pushQuit">
                                         <property name="text">
-                                            <string>Запустить</string>
+                                            <string>Выйти</string>
                                         </property>
                                     </widget>
                                 </item>
@@ -255,10 +255,29 @@
                                         </property>
                                     </widget>
                                 </item>
-                                <item row="3" column="1">
-                                    <widget class="QPushButton" name="pushQuit">
+                                <item row="1" column="1">
+                                    <widget class="QPushButton" name="pushStart">
                                         <property name="text">
-                                            <string>Выйти</string>
+                                            <string>Запустить</string>
+                                        </property>
+                                    </widget>
+                                </item>
+                                <item row="4" column="1">
+                                    <widget class="QProgressBar" name="progressBar">
+                                        <property name="enabled">
+                                            <bool>true</bool>
+                                        </property>
+                                        <property name="sizePolicy">
+                                            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                                                <horstretch>0</horstretch>
+                                                <verstretch>0</verstretch>
+                                            </sizepolicy>
+                                        </property>
+                                        <property name="value">
+                                            <number>0</number>
+                                        </property>
+                                        <property name="textVisible">
+                                            <bool>false</bool>
                                         </property>
                                     </widget>
                                 </item>

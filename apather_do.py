@@ -15,7 +15,7 @@ import ApatcherGendocs as adoc
 import ApatcherMenu as amenu
 import ApatcherUtils as autil
 
-__version__ = "0.9.8"
+__version__ = "0.9.9"
 debug_mode = True
 
 
@@ -55,56 +55,17 @@ def create_parser():
     return parser
 
 
-def main():
-    global path_dir, tcfg_arg
-    start_exec_time = time.time()
-    log_dir = "back"
-    tmp_dir = "tmp"
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-
-    if not os.path.exists(tmp_dir):
-        os.makedirs(tmp_dir)
-
-    logging.basicConfig(filename="back/ct_main.log",
-                        level=logging.INFO,
-                        format='[%(asctime)s][%(levelname)s] %(message)s',
-                        datefmt='%m/%d/%Y %I:%M:%S',
-                        filemode="a+")
-    locale.setlocale(locale.LC_ALL, "ru")
-
+def generate_process_doc_patch(namespace):
     # настроим морфологический анализатор
     morph = MorphAnalyzer()
     # текущая дата в виде строки
     dt_make = datetime.date.today()
     # получим месяц в родительном падеже
+    # TODO morph не работает под qt. Нужно придумать обходной путь
     dt_str_make = dt_make.strftime(u"%d " + morph.parse(dt_make.strftime(u"%B"))[0].inflect({'gent'}).word + " %Y")
 
-    # получим аргументы командной строки
-    parser = create_parser()
-    namespace = parser.parse_args(sys.argv[1:])
-    logging.info(sys.argv)
-
-    try:
-        # если ручной режим, то парсим полученный json
-        data = []
-        if namespace.manual is not None:
-            with open(namespace.manual, encoding="utf-8") as data_file:
-                data = json.load(data_file)
-            namespace.project = data['project']
-            namespace.text = data['comment']
-            namespace.docs = data['with_docs']
-            namespace.only = data['only_docs']
-            if namespace.docs is True or namespace.only:
-                namespace.dir = data['dirprep'].strip("/")
-                namespace.customer = data['prep_customer']
-                namespace.anum = data['prepdocs']
-            namespace.before_script = data['scripts']
-    except Exception as inst:
-        logging.error("I couldn't find json file {0} in manual mode: {1}".format(namespace.manual, inst))
-        print(inst)
-        exit(0)
-
+    tcfg_arg = None
+    path_dir = None
     try:
         tcfg_arg = ac.CfgInfo()
         if namespace.project:
@@ -123,27 +84,22 @@ def main():
         logging.error("Unknown error: {0}".format(inst))
         print(inst)
         exit(0)
-
-    # запусти параллельно сжатие логов
-    # trd = threading.Thread(target=autil.zip_old_logs(log_dir, critdays=tcfg_arg.path.get("info", "loglife")))
-    # trd.start()
-
     # отобразим конфигурацию
     if debug_mode is True:
         print("Configuration: ")
         print("  Only docs -> {}".format(str(namespace.only)))
         print("  Can edit -> {}".format(str(namespace.edit)))
-        print("  Without making patch -> {}".format(str(namespace.nomake)))
-        print("  Commit changes -> {}".format(str(namespace.commit)))
         print("  Create docs (patch mode) -> {}".format(str(namespace.docs)))
         print("  With preparing for transferring to customer -> {}".format(str(namespace.customer)))
 
     transfer_objects = {"base": [], "sdk": [], "project": []}
+    updatelog_file = None
+    changelist_file = None
 
     if namespace.only is False:
         # получим статусы объектов в репо
         topl = ac.RepoJob(path_dir=path_dir)
-        objects_new, objects_mod, objects_del = topl.parse_status(topl.get_status())
+        objects_new, objects_mod, objects_del, objects_unchecked = topl.parse_status(topl.get_status())
         if namespace.edit is True:
             objects_new, objects_mod, objects_del = amenu.edit_files_list(new_lm=objects_new, mod_lm=objects_mod,
                                                                           del_lm=objects_del)
@@ -152,7 +108,7 @@ def main():
         # если ручной режим
         if namespace.manual is not None:
             objects_new = objects_del = []
-            list_files = objects_mod = data['patch_files']
+            list_files = objects_mod = namespace.patch_files
 
         # получим template sql для патча
         ptch_tmp = ac.PatchTemplate()
@@ -200,9 +156,9 @@ def main():
             transfer_objects["project"] = objects_new_p[0]
 
             # сгенерируем доки
-            changelist_file = adoc.generate_doc_changelist(project_patches=[proj_patch for x in range(0, 1)])
+            changelist_file = adoc.generate_doc_changelist(project_patches=[proj_patch])
             updatelog_file = adoc.generate_doc_upd_log(author_name=tcfg_arg.author,
-                                                       list_patch=[proj_patch.full_name for x in range(0, 1)],
+                                                       list_patch=[proj_patch.full_name],
                                                        dir_name=namespace.dir,
                                                        date_d=dt_str_make)
     else:
@@ -244,14 +200,58 @@ def main():
         # сформируем доки
         updatelog_file = adoc.generate_doc_upd_log(tcfg_arg.prepauthor, namespace.dir, dt_str_make, list_patch=tf_all)
         changelist_file = adoc.generate_doc_changelist(project_patches=proj_patches,
-                                     base_patches=base_patches,
-                                     sdk_patches=sdk_patches)
-
+                                                       base_patches=base_patches,
+                                                       sdk_patches=sdk_patches)
     if namespace.customer:
         autil.prepare_transferring_customer(lconf=tcfg_arg,
                                             transfer_objects=transfer_objects,
                                             ldir=namespace.dir,
                                             docs=[updatelog_file, changelist_file])
+
+
+def main():
+    start_exec_time = time.time()
+    log_dir = "back"
+    tmp_dir = "tmp"
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
+    if not os.path.exists(tmp_dir):
+        os.makedirs(tmp_dir)
+
+    logging.basicConfig(filename="back/ct_main.log",
+                        level=logging.INFO,
+                        format='[%(asctime)s][%(levelname)s] %(message)s',
+                        datefmt='%m/%d/%Y %I:%M:%S',
+                        filemode="a+")
+    locale.setlocale(locale.LC_ALL, "ru")
+
+    # получим аргументы командной строки
+    parser = create_parser()
+    namespace = parser.parse_args(sys.argv[1:])
+    logging.info(sys.argv)
+
+    try:
+        # если ручной режим, то парсим полученный json
+        if namespace.manual is not None:
+            with open(namespace.manual, encoding="utf-8") as data_file:
+                data = json.load(data_file)
+            namespace.project = data['project']
+            namespace.text = data['comment']
+            namespace.docs = data['with_docs']
+            namespace.only = data['only_docs']
+            if namespace.docs is True or namespace.only:
+                namespace.dir = data['dirprep'].strip("/")
+                namespace.customer = data['prep_customer']
+                namespace.anum = data['prepdocs']
+            namespace.before_script = data['scripts']
+            namespace.patch_files = data['patch_files']
+    except Exception as inst:
+        logging.error("I couldn't find json file {0} in manual mode: {1}".format(namespace.manual, inst))
+        print(inst)
+        exit(0)
+
+    generate_process_doc_patch(namespace)
 
     elapsed_time = time.time() - start_exec_time
     print("Runtime: {0} sec".format(round(elapsed_time, 3)))
