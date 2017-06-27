@@ -2,6 +2,7 @@ import configparser as cfg
 import datetime as dt
 import logging
 import sys
+import os
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
@@ -81,9 +82,9 @@ class PguiApatcherWindow(QMainWindow):
         self.setDefaultEnv()
 
     def initUI(self):
-        loadUi('mainwindow.ui', self)
+        loadUi(os.path.join(os.path.dirname(__file__), 'mainwindow.ui'), self)
         self.setWindowTitle("Автопатчилка GUI ver. 0.1")
-        self.setWindowIcon(QIcon('icon.jpg'))
+        self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), 'icon.jpg')))
         self.comboProjects.addItems(self.user_config.projects)
 
     def connectAllSignals(self):
