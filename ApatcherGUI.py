@@ -9,8 +9,8 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem, QMessageBox, QSizePolicy
 from PyQt5.uic import loadUi
 
-import ApatcherClass as ac
-import apather_do as ado
+import fwpt_apatcher.ApatcherClass as ac
+import fwpt_apatcher.apather_do as ado
 
 logger = logging.getLogger(__name__)
 
@@ -215,8 +215,8 @@ class PguiApatcherWindow(QMainWindow):
         if user_space_set.docs or user_space_set.only:
             user_space_set.dir = self.lineDirToPass.text().strip("/")
             user_space_set.customer = self.checkBoxPrepareCustomer.isChecked()
-            user_space_set.anum = "[s:{sdk},b:{base},p:{proj}]".format(sdk=self.lineBasePatch.text(),
-                                                                       base=self.lineSDKPatch.text(),
+            user_space_set.anum = "[s:{sdk},b:{base},p:{proj}]".format(sdk=self.lineSDKPatch.text(),
+                                                                       base=self.lineBasePatch.text(),
                                                                        proj=self.lineProjectPatch.text())
         user_space_set.before_script = self.textBeforeFiles.toPlainText()
         user_space_set.patch_files = self.get_tab_files_content()

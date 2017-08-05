@@ -10,12 +10,12 @@ import time
 
 from pymorphy2 import MorphAnalyzer
 
-import ApatcherClass as ac
-import ApatcherGendocs as adoc
-import ApatcherMenu as amenu
-import ApatcherUtils as autil
+import fwpt_apatcher.ApatcherClass as ac
+import fwpt_apatcher.ApatcherGendocs as adoc
+import fwpt_apatcher.ApatcherMenu as amenu
+import fwpt_apatcher.ApatcherUtils as autil
 
-__version__ = "0.9.9"
+__version__ = "1.0.3"
 debug_mode = False
 
 logging.basicConfig(filename="back/ct_main.log",

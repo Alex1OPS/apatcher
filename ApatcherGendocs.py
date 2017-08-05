@@ -6,7 +6,7 @@ from docx.shared import Pt
 from docx.shared import Inches
 from docx.shared import Cm
 from docx.enum.table import WD_TABLE_ALIGNMENT
-import ApatcherClass as ac
+import fwpt_apatcher.ApatcherClass as ac
 
 logger = logging.getLogger(__name__)
 

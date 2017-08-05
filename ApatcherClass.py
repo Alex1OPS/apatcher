@@ -5,7 +5,7 @@ import os
 import subprocess
 import sys
 
-import ApatcherUtils as autil
+import fwpt_apatcher.ApatcherUtils as autil
 
 logger = logging.getLogger(__name__)
 
