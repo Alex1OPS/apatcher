@@ -1,16 +1,16 @@
 import configparser as cfg
 import datetime as dt
 import logging
-import sys
 import os
-
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem, QMessageBox, QSizePolicy
-from PyQt5.uic import loadUi
+import sys
 
 import fwpt_apatcher.ApatcherClass as ac
 import fwpt_apatcher.apather_do as ado
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem, QMessageBox, QSizePolicy, QLabel, \
+    QLineEdit
+from PyQt5.uic import loadUi
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +96,7 @@ class PguiApatcherWindow(QMainWindow):
         self.pushRefresh.clicked.connect(self.getRepoFiles)
         self.checkBoxWithFiles.clicked.connect(self.changeWriteModePath)
         self.pushErase.clicked.connect(self.cancel_current_set)
+        self.onlyDocsGen.clicked.connect(self.changeDocsDetailsMode)
 
     def setDefaultEnv(self):
         self.lineAuthor.setText(self.user_config.author_name)
@@ -103,6 +104,8 @@ class PguiApatcherWindow(QMainWindow):
 
         self.lineDirToPass.setDisabled(True)
         self.lineDirToPass.setReadOnly(True)
+
+        self.scrollAreaWidgetContents.setDisabled(True)
 
         self.lineDirToPass.setToolTip("Папка для передачи документации")
         self.comboProjects.setCurrentIndex(-1)
@@ -118,11 +121,23 @@ class PguiApatcherWindow(QMainWindow):
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(100)
 
+        layout = self.gridLayout_3
+        self.addDocsDetailsProjectEntity(layout, "Базовые", "lineBasePatch", 0)
+        self.addDocsDetailsProjectEntity(layout, "SDK", "lineSDKPatch", 1)
+        self.addDocsDetailsProjectEntity(layout, "Проектные", "lineProjectPatch", 2)
+
     def appendLog(self, text):
         self.textLog.append(text)
 
     def btnQuitClick(self):
         sys.exit(self.close())
+
+    @staticmethod
+    def addDocsDetailsProjectEntity(layout, label_name, object_name, hr):
+        gd_line = QLineEdit("")
+        gd_line.setObjectName(object_name)
+        layout.addWidget(QLabel(label_name), hr, 0)
+        layout.addWidget(gd_line, hr, 1)
 
     def changeActiveProject(self, proj_name):
         current_project_path = self.user_config.projects_info.get(proj_name)
@@ -180,6 +195,12 @@ class PguiApatcherWindow(QMainWindow):
             self.lineDirToPass.setDisabled(True)
             self.lineDirToPass.setReadOnly(True)
 
+    def changeDocsDetailsMode(self):
+        if self.onlyDocsGen.isChecked():
+            self.scrollAreaWidgetContents.setDisabled(False)
+        else:
+            self.scrollAreaWidgetContents.setDisabled(True)
+
     def cancel_current_set(self):
         self.tableFiles.clearContents()
         self.tableFiles.setRowCount(0)
@@ -209,7 +230,7 @@ class PguiApatcherWindow(QMainWindow):
         user_space_set.project = self.current_project
         user_space_set.text = self.textComment.toPlainText()
         user_space_set.docs = self.checkBoxWithFiles.isChecked()
-        user_space_set.only = True if self.tabWidget.currentIndex() == 1 else False
+        user_space_set.only = self.onlyDocsGen.isChecked()
         user_space_set.nomake = user_space_set.only
         user_space_set.make = not user_space_set.nomake
         if user_space_set.docs or user_space_set.only:

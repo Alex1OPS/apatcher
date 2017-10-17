@@ -1,317 +1,359 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
-    <class>MainWindow</class>
-    <widget class="QMainWindow" name="MainWindow">
-        <property name="geometry">
-            <rect>
-                <x>0</x>
-                <y>0</y>
-                <width>800</width>
-                <height>600</height>
-            </rect>
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>987</width>
+    <height>541</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout_4">
+    <item row="0" column="0">
+     <layout class="QGridLayout" name="gridLayout_12">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <property name="bottomMargin">
+       <number>5</number>
+      </property>
+      <item row="1" column="1" colspan="3">
+       <widget class="QTableWidget" name="tableFiles">
+        <property name="minimumSize">
+         <size>
+          <width>500</width>
+          <height>0</height>
+         </size>
         </property>
-        <property name="windowTitle">
-            <string>MainWindow</string>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16777215</height>
+         </size>
         </property>
-        <widget class="QWidget" name="centralwidget">
-            <layout class="QHBoxLayout" name="horizontalLayout">
-                <item>
-                    <layout class="QGridLayout" name="gridLayout_12">
-                        <property name="leftMargin">
-                            <number>5</number>
-                        </property>
-                        <property name="topMargin">
-                            <number>2</number>
-                        </property>
-                        <property name="rightMargin">
-                            <number>5</number>
-                        </property>
-                        <property name="bottomMargin">
-                            <number>2</number>
-                        </property>
-                        <item row="1" column="1" colspan="3">
-                            <widget class="QTableWidget" name="tableFiles"/>
-                        </item>
-                        <item row="2" column="0">
-                            <widget class="QLabel" name="label_3">
-                                <property name="text">
-                                    <string>Комментарий</string>
-                                </property>
-                            </widget>
-                        </item>
-                        <item row="1" column="0">
-                            <layout class="QGridLayout" name="gridLayout_2">
-                                <item row="3" column="0" colspan="2">
-                                    <widget class="QTabWidget" name="tabWidget">
-                                        <property name="sizePolicy">
-                                            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                                                <horstretch>0</horstretch>
-                                                <verstretch>0</verstretch>
-                                            </sizepolicy>
-                                        </property>
-                                        <property name="minimumSize">
-                                            <size>
-                                                <width>250</width>
-                                                <height>150</height>
-                                            </size>
-                                        </property>
-                                        <property name="currentIndex">
-                                            <number>0</number>
-                                        </property>
-                                        <widget class="QWidget" name="tab">
-                                            <attribute name="title">
-                                                <string>Основное</string>
-                                            </attribute>
-                                            <widget class="QWidget" name="gridLayoutWidget">
-                                                <property name="geometry">
-                                                    <rect>
-                                                        <x>0</x>
-                                                        <y>0</y>
-                                                        <width>241</width>
-                                                        <height>111</height>
-                                                    </rect>
-                                                </property>
-                                                <layout class="QGridLayout" name="gridLayout">
-                                                    <item row="2" column="1">
-                                                        <widget class="QLineEdit" name="lineDirToPass">
-                                                            <property name="text">
-                                                                <string extracomment="Папка для передачи"/>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="2" column="0">
-                                                        <widget class="QLabel" name="label_6">
-                                                            <property name="text">
-                                                                <string>Папка</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="0" colspan="2">
-                                                        <widget class="QCheckBox" name="checkBoxWithFiles">
-                                                            <property name="text">
-                                                                <string>С генерацией документов</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="0" colspan="2">
-                                                        <widget class="QCheckBox" name="checkBoxPrepareCustomer">
-                                                            <property name="text">
-                                                                <string>Подготовка папки</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                </layout>
-                                            </widget>
-                                        </widget>
-                                        <widget class="QWidget" name="tab_2">
-                                            <attribute name="title">
-                                                <string>Только доки</string>
-                                            </attribute>
-                                            <widget class="QWidget" name="gridLayoutWidget_2">
-                                                <property name="geometry">
-                                                    <rect>
-                                                        <x>0</x>
-                                                        <y>10</y>
-                                                        <width>241</width>
-                                                        <height>101</height>
-                                                    </rect>
-                                                </property>
-                                                <layout class="QGridLayout" name="gridLayout_3">
-                                                    <item row="1" column="0">
-                                                        <widget class="QLabel" name="label_8">
-                                                            <property name="text">
-                                                                <string>SDK</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="0">
-                                                        <widget class="QLabel" name="label_7">
-                                                            <property name="text">
-                                                                <string>Базовые</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="2" column="0">
-                                                        <widget class="QLabel" name="label_9">
-                                                            <property name="text">
-                                                                <string>Проектные</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="3" column="0">
-                                                        <widget class="QLabel" name="label_10">
-                                                            <property name="text">
-                                                                <string>OSS</string>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="0" column="1">
-                                                        <widget class="QLineEdit" name="lineBasePatch">
-                                                            <property name="sizePolicy">
-                                                                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                                                                    <horstretch>0</horstretch>
-                                                                    <verstretch>0</verstretch>
-                                                                </sizepolicy>
-                                                            </property>
-                                                        </widget>
-                                                    </item>
-                                                    <item row="1" column="1">
-                                                        <widget class="QLineEdit" name="lineSDKPatch"/>
-                                                    </item>
-                                                    <item row="2" column="1">
-                                                        <widget class="QLineEdit" name="lineProjectPatch"/>
-                                                    </item>
-                                                    <item row="3" column="1">
-                                                        <widget class="QLineEdit" name="lineOssPatch"/>
-                                                    </item>
-                                                </layout>
-                                            </widget>
-                                        </widget>
-                                    </widget>
-                                </item>
-                                <item row="1" column="1">
-                                    <widget class="QLineEdit" name="lineAuthor">
-                                        <property name="sizePolicy">
-                                            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                                                <horstretch>0</horstretch>
-                                                <verstretch>0</verstretch>
-                                            </sizepolicy>
-                                        </property>
-                                    </widget>
-                                </item>
-                                <item row="0" column="0">
-                                    <widget class="QLabel" name="label">
-                                        <property name="text">
-                                            <string>Проект</string>
-                                        </property>
-                                    </widget>
-                                </item>
-                                <item row="0" column="1">
-                                    <widget class="QComboBox" name="comboProjects"/>
-                                </item>
-                                <item row="1" column="0">
-                                    <widget class="QLabel" name="label_2">
-                                        <property name="text">
-                                            <string>Автор</string>
-                                        </property>
-                                    </widget>
-                                </item>
-                            </layout>
-                        </item>
-                        <item row="3" column="1" colspan="3">
-                            <widget class="QTextEdit" name="textBeforeFiles"/>
-                        </item>
-                        <item row="3" column="0">
-                            <widget class="QTextEdit" name="textComment">
-                                <property name="sizePolicy">
-                                    <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-                                        <horstretch>0</horstretch>
-                                        <verstretch>0</verstretch>
-                                    </sizepolicy>
-                                </property>
-                            </widget>
-                        </item>
-                        <item row="4" column="1" colspan="3">
-                            <widget class="QTextEdit" name="textLog">
-                                <property name="readOnly">
-                                    <bool>true</bool>
-                                </property>
-                            </widget>
-                        </item>
-                        <item row="2" column="1">
-                            <widget class="QLabel" name="label_5">
-                                <property name="text">
-                                    <string>Вставка до файлов в патче</string>
-                                </property>
-                            </widget>
-                        </item>
-                        <item row="0" column="2">
-                            <widget class="QPushButton" name="pushRefresh">
-                                <property name="text">
-                                    <string>Обновить</string>
-                                </property>
-                            </widget>
-                        </item>
-                        <item row="0" column="3">
-                            <widget class="QPushButton" name="pushAdd">
-                                <property name="text">
-                                    <string>+</string>
-                                </property>
-                            </widget>
-                        </item>
-                        <item row="4" column="0">
-                            <layout class="QGridLayout" name="gridLayout_5">
-                                <item row="3" column="1">
-                                    <widget class="QPushButton" name="pushQuit">
-                                        <property name="text">
-                                            <string>Выйти</string>
-                                        </property>
-                                    </widget>
-                                </item>
-                                <item row="2" column="1">
-                                    <widget class="QPushButton" name="pushErase">
-                                        <property name="text">
-                                            <string>Сброс</string>
-                                        </property>
-                                    </widget>
-                                </item>
-                                <item row="1" column="1">
-                                    <widget class="QPushButton" name="pushStart">
-                                        <property name="text">
-                                            <string>Запустить</string>
-                                        </property>
-                                    </widget>
-                                </item>
-                                <item row="4" column="1">
-                                    <widget class="QProgressBar" name="progressBar">
-                                        <property name="enabled">
-                                            <bool>true</bool>
-                                        </property>
-                                        <property name="sizePolicy">
-                                            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                                                <horstretch>0</horstretch>
-                                                <verstretch>0</verstretch>
-                                            </sizepolicy>
-                                        </property>
-                                        <property name="value">
-                                            <number>0</number>
-                                        </property>
-                                        <property name="textVisible">
-                                            <bool>false</bool>
-                                        </property>
-                                    </widget>
-                                </item>
-                            </layout>
-                        </item>
-                        <item row="0" column="1">
-                            <widget class="QLabel" name="label_4">
-                                <property name="text">
-                                    <string>Файлы, включённые в патч</string>
-                                </property>
-                            </widget>
-                        </item>
-                    </layout>
-                </item>
-            </layout>
-        </widget>
-        <widget class="QMenuBar" name="menubar">
-            <property name="geometry">
-                <rect>
-                    <x>0</x>
-                    <y>0</y>
-                    <width>800</width>
-                    <height>21</height>
-                </rect>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Комментарий</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1" colspan="3">
+       <widget class="QTextEdit" name="textBeforeFiles"/>
+      </item>
+      <item row="1" column="0">
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="lineAuthor">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="comboProjects"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Автор</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Проект</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="2">
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="lineDirToPass">
+            <property name="text">
+             <string extracomment="Папка для передачи"/>
             </property>
-            <widget class="QMenu" name="menu">
-                <property name="title">
-                    <string>Файл</string>
-                </property>
-            </widget>
-            <addaction name="menu"/>
-        </widget>
-        <widget class="QStatusBar" name="statusbar"/>
-    </widget>
-    <resources/>
-    <connections/>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Папка</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0" colspan="2">
+           <widget class="QCheckBox" name="checkBoxWithFiles">
+            <property name="text">
+             <string>С генерацией документов</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QCheckBox" name="checkBoxPrepareCustomer">
+            <property name="text">
+             <string>Подготовка папки</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+      <item row="3" column="0">
+       <widget class="QTextEdit" name="textComment">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Вставка до файлов в патче</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QPushButton" name="pushRefresh">
+        <property name="text">
+         <string>Обновить</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QPushButton" name="pushAdd">
+        <property name="text">
+         <string>+</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1" colspan="3">
+       <widget class="QTextEdit" name="textLog">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Файлы, включённые в патч</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <layout class="QGridLayout" name="gridLayout_5">
+        <item row="1" column="1">
+         <widget class="QPushButton" name="pushStart">
+          <property name="text">
+           <string>Запустить</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QProgressBar" name="progressBar">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="value">
+           <number>0</number>
+          </property>
+          <property name="textVisible">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QPushButton" name="pushQuit">
+          <property name="text">
+           <string>Выйти</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QPushButton" name="pushErase">
+          <property name="text">
+           <string>Сброс</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+    <item row="0" column="1">
+     <layout class="QGridLayout" name="gridLayout_8">
+      <property name="leftMargin">
+       <number>10</number>
+      </property>
+      <property name="topMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>10</number>
+      </property>
+      <property name="bottomMargin">
+       <number>5</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QGroupBox" name="groupBox">
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>250</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>250</height>
+         </size>
+        </property>
+        <property name="title">
+         <string>Документы</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_9">
+         <item row="0" column="0">
+          <widget class="QCheckBox" name="onlyDocsGen">
+           <property name="text">
+            <string>Только документы</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QScrollArea" name="genDocsDetails">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>180</width>
+             <height>150</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>250</height>
+            </size>
+           </property>
+           <property name="verticalScrollBarPolicy">
+            <enum>Qt::ScrollBarAlwaysOn</enum>
+           </property>
+           <property name="horizontalScrollBarPolicy">
+            <enum>Qt::ScrollBarAsNeeded</enum>
+           </property>
+           <property name="widgetResizable">
+            <bool>true</bool>
+           </property>
+           <widget class="QWidget" name="scrollAreaWidgetContents">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>173</width>
+              <height>192</height>
+             </rect>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_10">
+             <item row="3" column="1">
+              <layout class="QGridLayout" name="gridLayout_3">
+               <property name="leftMargin">
+                <number>2</number>
+               </property>
+               <property name="topMargin">
+                <number>2</number>
+               </property>
+               <property name="rightMargin">
+                <number>2</number>
+               </property>
+               <property name="bottomMargin">
+                <number>2</number>
+               </property>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>987</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>Файл</string>
+    </property>
+   </widget>
+   <addaction name="menu"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
 </ui>
