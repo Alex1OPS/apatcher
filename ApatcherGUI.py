@@ -19,6 +19,7 @@ class CfgInfo:
     projects = None
     author_name = None
     projects_info = None
+    rootDir = None
 
     def __init__(self):
         config = cfg.ConfigParser()
@@ -29,6 +30,7 @@ class CfgInfo:
         self.projects = p
         self.projects_info = {pname.upper(): config.get("projects_path", pname) for pname in config["projects_path"]}
         self.author_name = config.get("info", "author")
+        self.rootDir = config.get("info", "rootDir")
 
 
 class SettingNamespace:
@@ -48,23 +50,26 @@ class SettingNamespace:
         self.make = False
         self.fwopt = None
         self.commit = False
+        self.dgen_details = None
 
     # печать состава namespace пользователя
     def print_namespace_composition(self):
         return (("User namespace consists of:\n" +
                  "manual = {manual}\nproject = {project}\ntext = {text}\ndocs = {docs}\nonly = {only}\n" +
                  "dir = {dir}\ncustomer = {customer}\nanum = {anum}\nbefore_scripts = {befscripts}\n" +
-                 "patch_files = {patchfiles}\nnomake = {nomake}\nmake = {make}").format(manual=self.manual,
-                                                                                        project=self.project,
-                                                                                        text=self.text,
-                                                                                        docs=self.docs, only=self.only,
-                                                                                        dir=self.dir,
-                                                                                        customer=self.customer,
-                                                                                        anum=self.anum,
-                                                                                        befscripts=self.before_script,
-                                                                                        patchfiles=self.patch_files,
-                                                                                        nomake=self.nomake,
-                                                                                        make=self.make)
+                 "patch_files = {patchfiles}\nnomake = {nomake}\nmake = {make}\ndoc_details={dgen}").format(
+            manual=self.manual,
+            project=self.project,
+            text=self.text,
+            docs=self.docs, only=self.only,
+            dir=self.dir,
+            customer=self.customer,
+            anum=self.anum,
+            befscripts=self.before_script,
+            patchfiles=self.patch_files,
+            nomake=self.nomake,
+            make=self.make,
+            dgen=self.dgen_details)
                 )
 
 
@@ -72,6 +77,8 @@ class PguiApatcherWindow(QMainWindow):
     user_config = None
     current_project = None
     current_proj_path = ""
+    doc_details_row_count = 0
+    doc_details = {}
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -86,6 +93,7 @@ class PguiApatcherWindow(QMainWindow):
         self.setWindowTitle("Автопатчилка GUI ver. 0.1")
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), 'icon.jpg')))
         self.comboProjects.addItems(self.user_config.projects)
+        self.fill_def_doc_details()
 
     def connectAllSignals(self):
         self.pushQuit.clicked.connect(self.btnQuitClick)
@@ -121,10 +129,13 @@ class PguiApatcherWindow(QMainWindow):
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(100)
 
-        layout = self.gridLayout_3
-        self.addDocsDetailsProjectEntity(layout, "Базовые", "lineBasePatch", 0)
-        self.addDocsDetailsProjectEntity(layout, "SDK", "lineSDKPatch", 1)
-        self.addDocsDetailsProjectEntity(layout, "Проектные", "lineProjectPatch", 2)
+    def fill_def_doc_details(self):
+        self.addDocsDetailsProjectEntity("Базовые", "line_base")
+        self.addDocsDetailsProjectEntity("SDK", "line_sdk")
+        self.addDocsDetailsProjectEntity("Проектные", "line_project")
+        self.addDocsDetailsProjectEntity("Сборки", "line_builds")
+        for x in self.getAvailableBillingOptions():
+            self.addDocsDetailsProjectEntity("(opt)" + x.replace("option_", "").upper(), "line_" + x)
 
     def appendLog(self, text):
         self.textLog.append(text)
@@ -132,12 +143,20 @@ class PguiApatcherWindow(QMainWindow):
     def btnQuitClick(self):
         sys.exit(self.close())
 
-    @staticmethod
-    def addDocsDetailsProjectEntity(layout, label_name, object_name, hr):
+    def addDocsDetailsProjectEntity(self, label_name, object_name, hr=None):
+        layout = self.gridLayout_3
+        _hr = hr if hr is not None else self.doc_details_row_count
         gd_line = QLineEdit("")
         gd_line.setObjectName(object_name)
-        layout.addWidget(QLabel(label_name), hr, 0)
-        layout.addWidget(gd_line, hr, 1)
+        layout.addWidget(QLabel(label_name), _hr, 0)
+        layout.addWidget(gd_line, _hr, 1)
+        self.doc_details_row_count += 1
+
+    def getAvailableBillingOptions(self):
+        a = []
+        for x in os.listdir(self.user_config.rootDir):
+            if x.startswith("option_"): a.append(x)
+        return a
 
     def changeActiveProject(self, proj_name):
         current_project_path = self.user_config.projects_info.get(proj_name)
@@ -215,15 +234,25 @@ class PguiApatcherWindow(QMainWindow):
 
     def get_tab_files_content(self, process_col=0):
         table = self.tableFiles
+        print(table)
+        print(table.rowCount())
         data = []
         for row in range(table.rowCount()):
             item = str(table.item(row, process_col).text())
             data.append(item)
         return data
 
+    def getDocDetails(self):
+        for w in (self.gridLayout_3.itemAt(i).widget() for i in range(self.gridLayout_3.count())):
+            if isinstance(w, QLineEdit):
+                self.doc_details[w.objectName().replace("line_", "")] = w.text()
+        return self.doc_details
+
     def start_generate_proc(self):
         self.appendLog("[{0}] Process started using:".format(dt.datetime.now().strftime("%y-%m-%d %H:%M:%S")))
         self.progressBar.setValue(0)
+
+        dgen_details_ = self.getDocDetails()
         user_space_set = SettingNamespace()
 
         user_space_set.manual = False
@@ -236,16 +265,16 @@ class PguiApatcherWindow(QMainWindow):
         if user_space_set.docs or user_space_set.only:
             user_space_set.dir = self.lineDirToPass.text().strip("/")
             user_space_set.customer = self.checkBoxPrepareCustomer.isChecked()
-            user_space_set.anum = "[s:{sdk},b:{base},p:{proj}]".format(sdk=self.lineSDKPatch.text(),
-                                                                       base=self.lineBasePatch.text(),
-                                                                       proj=self.lineProjectPatch.text())
+            user_space_set.anum = "[s:{sdk},b:{base},p:{proj}]"
         user_space_set.before_script = self.textBeforeFiles.toPlainText()
         user_space_set.patch_files = self.get_tab_files_content()
         user_space_set.fwopt = None
+        user_space_set.dgen_details = dgen_details_
 
         logging.info("User namespace:{}".format(user_space_set.print_namespace_composition()))
-        ado.generate_process_doc_patch(user_space_set)
+        return
 
+        ado.generate_process_doc_patch(user_space_set)
         self.progressBar.setValue(100)
 
 
