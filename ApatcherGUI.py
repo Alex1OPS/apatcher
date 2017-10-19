@@ -234,8 +234,6 @@ class PguiApatcherWindow(QMainWindow):
 
     def get_tab_files_content(self, process_col=0):
         table = self.tableFiles
-        print(table)
-        print(table.rowCount())
         data = []
         for row in range(table.rowCount()):
             item = str(table.item(row, process_col).text())
@@ -247,6 +245,10 @@ class PguiApatcherWindow(QMainWindow):
             if isinstance(w, QLineEdit):
                 self.doc_details[w.objectName().replace("line_", "")] = w.text()
         return self.doc_details
+
+    def getLineDocDetails(self):
+        res = ",".join(["%s:%s" % (key, value) for (key, value) in self.doc_details.items()])
+        return "[" + res + "]"
 
     def start_generate_proc(self):
         self.appendLog("[{0}] Process started using:".format(dt.datetime.now().strftime("%y-%m-%d %H:%M:%S")))
@@ -265,14 +267,13 @@ class PguiApatcherWindow(QMainWindow):
         if user_space_set.docs or user_space_set.only:
             user_space_set.dir = self.lineDirToPass.text().strip("/")
             user_space_set.customer = self.checkBoxPrepareCustomer.isChecked()
-            user_space_set.anum = "[s:{sdk},b:{base},p:{proj}]"
+            user_space_set.anum = self.getLineDocDetails()
         user_space_set.before_script = self.textBeforeFiles.toPlainText()
         user_space_set.patch_files = self.get_tab_files_content()
         user_space_set.fwopt = None
         user_space_set.dgen_details = dgen_details_
 
         logging.info("User namespace:{}".format(user_space_set.print_namespace_composition()))
-        return
 
         ado.generate_process_doc_patch(user_space_set)
         self.progressBar.setValue(100)
