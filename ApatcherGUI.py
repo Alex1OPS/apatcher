@@ -4,13 +4,13 @@ import logging
 import os
 import sys
 
-import fwpt_apatcher.ApatcherClass as ac
-import fwpt_apatcher.apather_do as ado
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem, QMessageBox, QSizePolicy, QLabel, \
-    QLineEdit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem, QMessageBox, QSizePolicy
 from PyQt5.uic import loadUi
+
+import fwpt_apatcher.ApatcherClass as ac
+import fwpt_apatcher.apather_do as ado
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ class SettingNamespace:
             nomake=self.nomake,
             make=self.make,
             dgen=self.dgen_details)
-                )
+        )
 
 
 class PguiApatcherWindow(QMainWindow):
@@ -93,7 +93,6 @@ class PguiApatcherWindow(QMainWindow):
         self.setWindowTitle("Автопатчилка GUI ver. 0.1")
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), 'icon.jpg')))
         self.comboProjects.addItems(self.user_config.projects)
-        self.fill_def_doc_details()
 
     def connectAllSignals(self):
         self.pushQuit.clicked.connect(self.btnQuitClick)
@@ -112,8 +111,7 @@ class PguiApatcherWindow(QMainWindow):
 
         self.lineDirToPass.setDisabled(True)
         self.lineDirToPass.setReadOnly(True)
-
-        self.scrollAreaWidgetContents.setDisabled(True)
+        self.tableDocsDetails.setDisabled(True)
 
         self.lineDirToPass.setToolTip("Папка для передачи документации")
         self.comboProjects.setCurrentIndex(-1)
@@ -126,16 +124,29 @@ class PguiApatcherWindow(QMainWindow):
         tab_labels = ["Файл", "Действие"]
         self.tableFiles.setHorizontalHeaderLabels(tab_labels)
 
+        # подготовка таблицы для документов
+        self.tableDocsDetails.setColumnCount(3)
+        self.tableDocsDetails.setColumnWidth(0, 100)
+        self.tableDocsDetails.setColumnWidth(1, 100)
+        self.tableDocsDetails.setColumnHidden(2, True)
+        self.tableDocsDetails.verticalHeader().setVisible(True)
+        tab_labels = ["Проект", "Диапазон"]
+        self.tableDocsDetails.setHorizontalHeaderLabels(tab_labels)
+
+        self.fill_def_doc_details()
+
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(100)
 
     def fill_def_doc_details(self):
-        self.addDocsDetailsProjectEntity("Базовые", "line_base")
-        self.addDocsDetailsProjectEntity("SDK", "line_sdk")
-        self.addDocsDetailsProjectEntity("Проектные", "line_project")
-        self.addDocsDetailsProjectEntity("Сборки", "line_builds")
+        self.addDocsDetailsProjectEntity("Базовые", "base")
+        self.addDocsDetailsProjectEntity("SDK", "sdk")
+        self.addDocsDetailsProjectEntity("Сборки", "builds")
+
         for x in self.getAvailableBillingOptions():
-            self.addDocsDetailsProjectEntity("(opt)" + x.replace("option_", "").upper(), "line_" + x)
+            self.addDocsDetailsProjectEntity("(opt)" + x.replace("option_", "").upper(), x)
+        for x in self.getAvailableBillingProjects():
+            self.addDocsDetailsProjectEntity(x.upper(), x)
 
     def appendLog(self, text):
         self.textLog.append(text)
@@ -143,19 +154,26 @@ class PguiApatcherWindow(QMainWindow):
     def btnQuitClick(self):
         sys.exit(self.close())
 
-    def addDocsDetailsProjectEntity(self, label_name, object_name, hr=None):
-        layout = self.gridLayout_3
-        _hr = hr if hr is not None else self.doc_details_row_count
-        gd_line = QLineEdit("")
-        gd_line.setObjectName(object_name)
-        layout.addWidget(QLabel(label_name), _hr, 0)
-        layout.addWidget(gd_line, _hr, 1)
-        self.doc_details_row_count += 1
+    def addDocsDetailsProjectEntity(self, label_name, object_name):
+        current_row = self.tableDocsDetails.rowCount()
+        self.tableDocsDetails.insertRow(current_row)
+        self.tableDocsDetails.setItem(current_row, 0, QTableWidgetItem(label_name))
+        self.tableDocsDetails.setItem(current_row, 1, QTableWidgetItem(""))
+        self.tableDocsDetails.setItem(current_row, 2, QTableWidgetItem(object_name))
+        self.tableDocsDetails.item(current_row, 0).setFlags(Qt.ItemIsEditable)
+        self.doc_details_row_count = current_row
 
     def getAvailableBillingOptions(self):
         a = []
         for x in os.listdir(self.user_config.rootDir):
             if x.startswith("option_"): a.append(x)
+        return a
+
+    def getAvailableBillingProjects(self):
+        a = []
+        _tmp_p = os.path.join(self.user_config.rootDir, "projects")
+        for x in os.listdir(_tmp_p):
+            if os.path.isdir(os.path.join(_tmp_p, x)): a.append(x)
         return a
 
     def changeActiveProject(self, proj_name):
@@ -216,9 +234,9 @@ class PguiApatcherWindow(QMainWindow):
 
     def changeDocsDetailsMode(self):
         if self.onlyDocsGen.isChecked():
-            self.scrollAreaWidgetContents.setDisabled(False)
+            self.tableDocsDetails.setDisabled(False)
         else:
-            self.scrollAreaWidgetContents.setDisabled(True)
+            self.tableDocsDetails.setDisabled(True)
 
     def cancel_current_set(self):
         self.tableFiles.clearContents()
@@ -241,9 +259,11 @@ class PguiApatcherWindow(QMainWindow):
         return data
 
     def getDocDetails(self):
-        for w in (self.gridLayout_3.itemAt(i).widget() for i in range(self.gridLayout_3.count())):
-            if isinstance(w, QLineEdit):
-                self.doc_details[w.objectName().replace("line_", "")] = w.text()
+        table = self.tableDocsDetails
+        for w in range(table.rowCount()):
+            project_name = str(table.item(w, 2).text())
+            project_num_d = str(table.item(w, 1).text())
+            self.doc_details[project_name] = project_num_d
         return self.doc_details
 
     def getLineDocDetails(self):

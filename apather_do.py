@@ -11,6 +11,7 @@ import time
 from pymorphy2 import MorphAnalyzer
 
 import fwpt_apatcher.ApatcherClass as ac
+import fwpt_apatcher.ApatcherGDocs as agd
 import fwpt_apatcher.ApatcherGendocs as adoc
 import fwpt_apatcher.ApatcherMenu as amenu
 import fwpt_apatcher.ApatcherUtils as autil
@@ -174,47 +175,13 @@ def generate_process_doc_patch(namespace):
                                                        dir_name=namespace.dir,
                                                        date_d=dt_str_make)
     else:
-        print(namespace.anum)
-        # только генерируем документы по патчам, указанным в папке cfg
-        # p_sdk, p_base, p_proj = autil.parse_nums_patches_interval(namespace.anum)
-        # tf_all, tf_sdk, tf_base, tf_proj = autil.get_all_patch_files_by_nums(tcfg_arg.path.get("patches_path", "sdk"),
-        #                                                                      tcfg_arg.path.get("patches_path", "base"),
-        #                                                                      path_dir,
-        #                                                                      p_sdk,
-        #                                                                      p_base,
-        #                                                                      p_proj)
-        #
-        # transfer_objects["project"] = tf_proj
-        # transfer_objects["base"] = tf_base
-        # transfer_objects["sdk"] = tf_sdk
-        #
-        # # соберём классы по каждому патчу
-        # sdk_patches = []
-        # for x in tf_sdk:
-        #     tp = ac.PatchPrint()
-        #     tp.parse_from_exists(autil.get_patch_top_txt(x))
-        #     tp.full_name = x.split("\\")[-1]
-        #     sdk_patches.append(tp)
-        # base_patches = []
-        # for x in tf_base:
-        #     tp = ac.PatchPrint()
-        #     tp.parse_from_exists(autil.get_patch_top_txt(x))
-        #     tp.full_name = x.split("\\")[-1]
-        #     base_patches.append(tp)
-        # proj_patches = []
-        # for x in tf_proj:
-        #     tp = ac.PatchPrint()
-        #     tp.parse_from_exists(autil.get_patch_top_txt(x))
-        #     tp.full_name = x.split("\\")[-1]
-        #     proj_patches.append(tp)
-        #
-        # tf_all = [x.split("\\")[-1] for x in tf_all]
-        #
-        # # сформируем доки
-        # updatelog_file = adoc.generate_doc_upd_log(tcfg_arg.prepauthor, namespace.dir, dt_str_make, list_patch=tf_all)
-        # changelist_file = adoc.generate_doc_changelist(project_patches=proj_patches,
-        #                                                base_patches=base_patches,
-        #                                                sdk_patches=sdk_patches)
+        l_pc = agd.parse_namespace_pc(namespace.anum, root_path=tcfg_arg.root_path)
+        for i in l_pc: i.prepare()
+        for i in l_pc: logging.debug(i)
+
+        doc_changelist = agd.DocEntity(doc_name="changelist.docx", projects=l_pc)
+        doc_update_log = agd.DocEntity(doc_name="update_log.docx", projects=l_pc)
+
     if namespace.customer:
         autil.prepare_transferring_customer(lconf=tcfg_arg,
                                             transfer_objects=transfer_objects,

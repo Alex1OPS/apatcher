@@ -1,4 +1,7 @@
+import glob
 import logging
+import os
+import re
 
 import fwpt_apatcher.ApatcherUtils as autil
 
@@ -78,21 +81,60 @@ class ProjectPatchEntity:
             raise Exception("Некорректный парсинг шапки патча #{}".format(num_patch))
 
     def __str__(self):
-        print("PatchEntity:\nversion={ver}, comment={comment},\n".format(ver=self.version_num, comment=self.comment))
+        return "PatchEntity:\n\tversion={ver}\n\tcomment={comment}\n\tchanged={files}\n".format(ver=self.version_num,
+                                                                                                comment=self.comment,
+                                                                                                files=self.changed_files)
 
 
 class ProjectCorpus:
     project_name = None
     project_ext = None
     patches = []
+    weight = None
+    num_patches = []
+    path_to = None
 
-    def __init__(self, project_name, project_ext, patches):
+    def __init__(self, project_name=None, project_ext=None, patches=None, path_to=None):
         self.project_name = project_name
         self.project_ext = project_ext
-        for x in patches:
-            if not isinstance(x, ProjectPatchEntity):
-                raise TypeError("An invalid type for the project patch collection.")
-        self.patches = patches
+        if patches is not None and len(patches) > 0:
+            for x in patches:
+                if not isinstance(x, ProjectPatchEntity):
+                    raise TypeError("An invalid type for the project patch collection.")
+            self.patches = patches
+        else:
+            self.patches = []
+        self.path_to = path_to
+
+    def set_primary(self, project_name, project_ext, weight, num_patches):
+        self.weight = weight
+        self.num_patches = num_patches
+        self.project_ext = project_ext
+        self.project_name = project_name
+
+    def prepare(self):
+        path_patches = os.path.join(self.path_to, "patches")
+        for p in self.num_patches:
+            xname = path_patches + "\\**\\*_*{0}.sql".format(str(p))
+            res_finding = glob.glob(xname, recursive=True)
+            if res_finding is not None and len(res_finding) > 0:
+                lst_tm = res_finding[0]
+            else:
+                logging.warning("Патч по маске={mask} будет пропущен".format(mask=xname))
+                continue
+            _ppe = ProjectPatchEntity()
+            _ppe.initFromSource(path_patch_=lst_tm, name_file_=os.path.basename(lst_tm))
+            self.patches.append(_ppe)
+
+    def print_patches_info(self):
+        for i in self.patches:
+            print(i)
+
+    def __str__(self):
+        return "Project Corpus:\n\tproject={project}\n\tnum_patches={num}\n\tweight={w}\n\text={ext}\n\tpath={path}".format(
+            project=self.project_name,
+            num=self.num_patches,
+            w=self.weight, ext=self.project_ext, path=self.path_to)
 
 
 class DocEntity:
@@ -105,3 +147,34 @@ class DocEntity:
             if not isinstance(x, ProjectCorpus):
                 raise TypeError("An invalid type for the project corpus in document.")
         self.projects = projects
+
+    def generate(self):
+        pass
+
+
+def parse_namespace_pc(s, root_path):
+    l_pcs = []
+    pre_pat_project_corpus_ = re.compile("([a-zA-Z_-]*?):([\d-]*?)[,\]]")
+    for i in pre_pat_project_corpus_.findall(s):
+        proj_ext_ = i[0]
+        proj_name_ = proj_ext_.replace("option_", "").replace("_", " ").upper() if proj_ext_ != "base" else "Базовые"
+
+        if proj_ext_ == "base":
+            path_to = root_path
+        elif proj_ext_ == "builds":
+            path_to = ""
+        elif proj_ext_.startswith("option_") or proj_ext_ == "sdk":
+            path_to = os.path.join(root_path, proj_ext_)
+        else:
+            path_to = os.path.join(root_path, "projects", proj_ext_)
+
+        _pc = ProjectCorpus(path_to=path_to)
+        spp_ = i[1]
+        try:
+            pp = [int(spp_)] if len(spp_.split("-")) < 2 else list(
+                range(int(spp_.split("-")[0]), int(spp_.split("-")[1]) + 1))
+        except ValueError:
+            pp = []
+        _pc.set_primary(project_name=proj_name_, project_ext=proj_ext_, weight=1, num_patches=pp)
+        if len(_pc.num_patches) > 0: l_pcs.append(_pc)
+    return l_pcs

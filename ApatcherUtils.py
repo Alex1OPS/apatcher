@@ -1,10 +1,11 @@
 import glob
 import logging
 import os
+import re
+import shutil
 import sys
 import time
 import zipfile
-import shutil
 
 from fw_patches2.module_prepare import prepare
 

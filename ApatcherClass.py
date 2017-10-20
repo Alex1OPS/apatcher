@@ -178,6 +178,7 @@ class CfgInfo:
         self.author = config.get("info", "author")
         self.prepauthor = config.get("info", "prepauthor")
         self.path = config
+        self.root_path = config.get("info", "rootDir")
         # структура подготовки папки обновлений
         for xkey in self.customer_path.keys():
             self.customer_path[xkey] = config.get("customer_folder", xkey)
