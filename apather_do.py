@@ -12,7 +12,6 @@ from pymorphy2 import MorphAnalyzer
 
 import fwpt_apatcher.ApatcherClass as ac
 import fwpt_apatcher.ApatcherGDocs as agd
-import fwpt_apatcher.ApatcherGendocs as adoc
 import fwpt_apatcher.ApatcherMenu as amenu
 import fwpt_apatcher.ApatcherUtils as autil
 
@@ -169,18 +168,25 @@ def generate_process_doc_patch(namespace):
             transfer_objects["project"] = [objects_new_p[0]]
 
             # сгенерируем доки
-            changelist_file = adoc.generate_doc_changelist(project_patches=[proj_patch])
-            updatelog_file = adoc.generate_doc_upd_log(author_name=tcfg_arg.prepauthor,
-                                                       list_patch=[proj_patch.full_name],
-                                                       dir_name=namespace.dir,
-                                                       date_d=dt_str_make)
+            # changelist_file = adoc.generate_doc_changelist(project_patches=[proj_patch])
+            # updatelog_file = adoc.generate_doc_upd_log(author_name=tcfg_arg.prepauthor,
+            #                                            list_patch=[proj_patch.full_name],
+            #                                            dir_name=namespace.dir,
+            #                                            date_d=dt_str_make)
     else:
         l_pc = agd.parse_namespace_pc(namespace.anum, root_path=tcfg_arg.root_path)
         for i in l_pc: i.prepare()
         for i in l_pc: logging.debug(i)
 
-        doc_changelist = agd.DocEntity(doc_name="changelist.docx", projects=l_pc)
-        doc_update_log = agd.DocEntity(doc_name="update_log.docx", projects=l_pc)
+        doc_changelist = agd.DocEntity(doc_name="changelist.docx", ext=agd.ExtNameDocTpl.CHANGELIST, projects=l_pc,
+                                       customer_dir=namespace.dir, print_author=tcfg_arg.prepauthor,
+                                       date_str=dt_str_make)
+        doc_update_log = agd.DocEntity(doc_name="update_log.docx", ext=agd.ExtNameDocTpl.UPDATE_LOG, projects=l_pc,
+                                       customer_dir=namespace.dir, print_author=tcfg_arg.prepauthor,
+                                       date_str=dt_str_make)
+
+        doc_changelist.generate()
+        doc_update_log.generate()
 
     if namespace.customer:
         autil.prepare_transferring_customer(lconf=tcfg_arg,
