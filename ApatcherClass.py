@@ -29,29 +29,16 @@ class PatchBase:
         self.files_list = files_list
 
 
-class PatchTemplate(PatchBase):
-    full = None
-
-    def __init__(self, author=None, date=None, num=None, ticket_num=None, objects_new=None, objects_mod=None,
-                 objects_del=None, comment=None, files_list=None, full=None):
-        PatchBase.__init__(self, author, date, num, ticket_num, objects_new, objects_mod, objects_del, comment,
-                           files_list)
-        self.full = full
-
-    def take_from(self, path_to_file=PATH_TO_TMPL):
-        try:
-            with open(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), path_to_file), 'r') as fl:
-                file_data = fl.read()
-            self.full = file_data
-        except FileNotFoundError:
-            print("Can\'t find a template sql file for make patch")
-            exit(0)
-
-
 class Patch(PatchBase):
     name = None
     full = None
     before_script = None
+
+    def __init__(self, author=None, date=None, num=None, ticket_num=None, objects_new=None, objects_mod=None,
+                 objects_del=None, comment=None, files_list=None, before_script=None):
+        PatchBase.__init__(self, author, date, num, ticket_num, objects_new, objects_mod, objects_del, comment,
+                           files_list)
+        self.before_script = before_script
 
     def prepare(self, proj_name="Default"):
         self.name = proj_name
@@ -64,6 +51,15 @@ class Patch(PatchBase):
         self.full = self.full.replace("__list_objs__", self.files_list)
         self.full = self.full.replace("__project__", self.name)
         self.full = self.full.replace("__before_script__", self.before_script)
+
+    def take_from(self, path_to_file=PATH_TO_TMPL):
+        try:
+            with open(os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), path_to_file), 'r') as fl:
+                file_data = fl.read()
+            self.full = file_data
+        except FileNotFoundError:
+            print("Can\'t find a template sql file for make patch")
+            exit(0)
 
     def save(self, path_to_file):
         with open(path_to_file, 'w') as fl:
@@ -102,10 +98,7 @@ class Patch(PatchBase):
         print(last)
         f.close()
 
-        if "DONE" in last:
-            return True
-        else:
-            return False
+        return True if "DONE" in last else False
 
 
 class RepoJob:
@@ -167,7 +160,7 @@ class CfgInfo:
     author = None
     prepauthor = None
     path = None
-    customer_path = {"prepare_dir": None, "sdk": None, "base": None, "project": None, "docs": None}
+    customer_path = {}
 
     def __init__(self, path=None, author=None):
         dir = os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -179,88 +172,4 @@ class CfgInfo:
         self.prepauthor = config.get("info", "prepauthor")
         self.path = config
         self.root_path = config.get("info", "rootDir")
-        # структура подготовки папки обновлений
-        for xkey in self.customer_path.keys():
-            self.customer_path[xkey] = config.get("customer_folder", xkey)
-
-
-class PatchPrint:
-    name = None
-    list_files = None
-    description = None
-    db_change = None
-    web_change = None
-    full_name = None
-
-    def __init__(self, name="", list_files=None, description="", full_name=None):
-        if list_files is None:
-            list_files = []
-        self.name = name
-        self.list_files = list_files
-        self.description = description
-        db_change, web_change = autil.split_list_files(self.list_files)
-        self.db_change = ", ".join(map(str, db_change))
-        self.web_change = ", ".join(map(str, web_change))
-        self.full_name = full_name
-
-    def parse_from_exists(self, full_txt="", full_name=""):
-        remap = {ord('\t'): None, ord('\f'): None, ord('\r'): None}
-        num_patch = 0
-
-        try:
-            author = full_txt[full_txt.find("Автор:") + len("Автор"): full_txt.find("Дата:")].strip(" :\n").translate(
-                remap)
-            num_patch = full_txt[
-                        full_txt.find("Номер патча:") + len("Номер патча"): full_txt.find("Номер тикета:")].strip(
-                " :\n").translate(remap)
-            descr = full_txt[full_txt.find("Комментарий:") + len("Комментарий"): full_txt.find("Создан:")].strip(
-                " :\n").replace("\n", "").translate(remap)
-            if full_txt.find("Создан:") != -1 and full_txt.find("Список включённых файлов:") != -1:
-                list_files = full_txt[full_txt.find("Список включённых файлов:") + len("Список включённых файлов"): len(
-                    full_txt)].strip(" :\n").translate(remap)
-                # удалим возможно предупреждение в шапке
-                p_delim_place = list_files.find(WARNING_MSG_DELIMITER)
-                if p_delim_place != -1:
-                    list_files = list_files[:p_delim_place]
-                lst_files = [x.strip(" ") for x in (list_files.lstrip(":")).split(",")]
-            else:
-                new_files = full_txt[full_txt.find("Новые объекты:") + len("Новые объекты"): full_txt.find(
-                    "Измененные объекты:")].strip(" :\n").translate(remap)
-                change_files = full_txt[full_txt.find("Измененные объекты:") + len("Измененные объекты"): full_txt.find(
-                    "Удаленные объекты:")].strip(" :\n").translate(remap)
-                del_files = full_txt[full_txt.find("Удаленные объекты:") + len("Удаленные объекты"): full_txt.find(
-                    "Комментарий:")].strip(" :\n").translate(remap)
-                list_files = new_files + change_files + del_files
-                lst_files = [x.strip(" ") for x in (list_files.lstrip(":")).split(",")]
-
-            self.name = num_patch.lstrip("0")
-            self.list_files = lst_files
-            db_change, web_change = autil.split_list_files(self.list_files)
-            self.db_change = ", ".join(map(str, db_change))
-            self.web_change = ", ".join(map(str, web_change))
-            self.description = descr
-            self.full_name = full_name
-        except Exception as e:
-            logging.error("Некорректный парсинг шапки патча. Исключение: {}".format(e))
-            raise Exception("Некорректный парсинг шапки патча #{}".format(num_patch))
-
-
-class PatchPrintExt(PatchPrint):
-    author_name = None
-    date_cr = None
-    dir_take = None
-    sdk_patches = None
-    base_patches = None
-    proj_patches = None
-    list_patches = None
-
-    def __init__(self, name, description=None, list_files=None, list_patches=None, sdk_patches=None,
-                 base_patches=None, proj_patches=None, author_name=None, date_cr=None, dir_take=None):
-        PatchPrint.__init__(self, name, list_files, description)
-        self.author_name = author_name
-        self.date_cr = date_cr
-        self.dir_take = dir_take
-        self.list_patches = list_patches
-        self.sdk_patches = sdk_patches
-        self.base_patches = base_patches
-        self.proj_patches = proj_patches
+        self.customer_path = dict(config.items('customer_folder'))

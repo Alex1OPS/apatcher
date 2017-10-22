@@ -125,6 +125,9 @@ class ProjectCorpus:
         self.project_ext = project_ext
         self.project_name = project_name
 
+    def get_objects_for_transfer(self):
+        return [i.path_patch_ for i in self.patches]
+
     def prepare(self):
         path_patches = os.path.join(self.path_to, "patches")
         for p in self.num_patches:
@@ -157,6 +160,7 @@ class DocEntity:
     customer_dir = None
     print_author = None
     projects = []
+    path_to = None
 
     def __init__(self, doc_name, ext, projects, customer_dir, print_author, date_str):
         self.doc_name = doc_name
@@ -261,7 +265,11 @@ class DocEntity:
         elif self.ext == ExtNameDocTpl.CHANGELIST:
             context = self.generate_changelist_context(docx_tpl)
         docx_tpl.render(context)
-        docx_tpl.save(self.doc_name)
+        self.path_to = "tmp\\{}".format(self.doc_name)
+        docx_tpl.save(self.path_to)
+
+    def get_doc_path(self):
+        return self.path_to
 
     def __str__(self):
         return "DocEntity: name={name}, ext={ext}".format(name=self.doc_name, ext=self.ext)

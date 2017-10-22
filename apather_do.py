@@ -104,9 +104,7 @@ def generate_process_doc_patch(namespace):
         print("  Create docs (patch mode) -> {}".format(str(namespace.docs)))
         print("  With preparing for transferring to customer -> {}".format(str(namespace.customer)))
 
-    transfer_objects = {"base": [], "sdk": [], "project": []}
-    updatelog_file = None
-    changelist_file = None
+    transfer_objects = {}
 
     if namespace.only is False:
         # получим статусы объектов в репо
@@ -122,21 +120,13 @@ def generate_process_doc_patch(namespace):
             objects_new = objects_del = []
             list_files = objects_mod = namespace.patch_files
 
-        # получим template sql для патча
-        ptch_tmp = ac.PatchTemplate()
-        ptch_tmp.take_from()
-
         # разберем статусы объектов репо по полям патча
-        fin_p = ac.Patch(author=tcfg_arg.author)
-        fin_p.comment = namespace.text
-        fin_p.objects_new = ", ".join([p.rsplit("\\", 1)[-1] for p in objects_new])
-        fin_p.objects_mod = ", ".join([p.rsplit("\\", 1)[-1] for p in objects_mod])
-        fin_p.objects_del = ", ".join([p.rsplit("\\", 1)[-1] for p in objects_del])
-        fin_p.files_list = "\n".join(["@@ " + p for p in list_files])
-        fin_p.full = ptch_tmp.full
-        fin_p.before_script = namespace.before_script
-
-        # запишем template.sql для патча
+        fin_p = ac.Patch(author=tcfg_arg.author, comment=namespace.text,
+                         objects_new=", ".join([p.rsplit("\\", 1)[-1] for p in objects_new]),
+                         objects_mod=", ".join([p.rsplit("\\", 1)[-1] for p in objects_mod]),
+                         objects_del=", ".join([p.rsplit("\\", 1)[-1] for p in objects_del]),
+                         files_list="\n".join(["@@ " + p for p in list_files]), before_script=namespace.before_script)
+        fin_p.take_from()
         fin_p.prepare(proj_name=namespace.project)
         fin_p.save(path_to_file=os.path.join(path_dir, "patch-template/template.sql"))
 
@@ -161,19 +151,14 @@ def generate_process_doc_patch(namespace):
             objects_new_p, objects_mod_p, objects_del_p, objects_unch_p = ts_rp_patch.parse_status(
                 ts_rp_patch.get_status(),
                 b_patch=True)
-            proj_patch = ac.PatchPrint()
-            proj_patch.parse_from_exists(autil.get_patch_top_txt(objects_new_p[0]),
-                                         full_name=str(objects_new_p[0]).split("\\")[-1])
 
-            transfer_objects["project"] = [objects_new_p[0]]
+            proj_name = path_dir.split("/")[-1]
+            latest_ver = str(os.path.basename(objects_new_p[0]))
+            latest_ver = latest_ver[11:latest_ver.index(".sql")]
+            namespace.anum = "[{proj}:{ver}]".format(proj=proj_name, ver=int(latest_ver))
 
-            # сгенерируем доки
-            # changelist_file = adoc.generate_doc_changelist(project_patches=[proj_patch])
-            # updatelog_file = adoc.generate_doc_upd_log(author_name=tcfg_arg.prepauthor,
-            #                                            list_patch=[proj_patch.full_name],
-            #                                            dir_name=namespace.dir,
-            #                                            date_d=dt_str_make)
-    else:
+    pr_docs = []
+    if (namespace.only is False and namespace.docs is True and namespace.nomake is False) or namespace.only:
         l_pc = agd.parse_namespace_pc(namespace.anum, root_path=tcfg_arg.root_path)
         for i in l_pc: i.prepare()
         for i in l_pc: logging.debug(i)
@@ -188,11 +173,14 @@ def generate_process_doc_patch(namespace):
         doc_changelist.generate()
         doc_update_log.generate()
 
-    if namespace.customer:
+        pr_docs = [doc_changelist.get_doc_path(), doc_update_log.get_doc_path()]
+        for x in l_pc: transfer_objects[x.project_ext] = x.get_objects_for_transfer()
+
+    if namespace.customer and len(pr_docs) != 0:
         autil.prepare_transferring_customer(lconf=tcfg_arg,
                                             transfer_objects=transfer_objects,
                                             ldir=namespace.dir,
-                                            docs=[updatelog_file, changelist_file])
+                                            docs=pr_docs)
 
 
 def main():

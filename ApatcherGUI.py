@@ -22,8 +22,10 @@ class CfgInfo:
     rootDir = None
 
     def __init__(self):
+        ldir = os.path.dirname(os.path.realpath(sys.argv[0]))
+        pth_cfg = os.path.join(ldir, ac.PATH_TO_CFG)
         config = cfg.ConfigParser()
-        config.read("config.ini")
+        config.read(pth_cfg)
 
         p = [x.upper() for x in config["projects_path"]]
         p.sort()

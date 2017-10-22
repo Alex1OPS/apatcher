@@ -1,7 +1,6 @@
 import glob
 import logging
 import os
-import re
 import shutil
 import sys
 import time
@@ -156,7 +155,7 @@ def prepare_transferring_customer(lconf, transfer_objects, ldir, docs):
     os.makedirs(target_dir)
 
     for dir_key in transfer_objects.keys():
-        copy_patches_to_dir(os.path.join(target_dir, lconf.customer_path[dir_key]), transfer_objects[dir_key])
+        copy_patches_to_dir(os.path.join(target_dir, lconf.customer_path[dir_key.lower()]), transfer_objects[dir_key])
 
     logger.info("Copying patch documents ...")
     copy_patches_to_dir(os.path.join(target_dir, lconf.customer_path["docs"]), docs)
