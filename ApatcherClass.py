@@ -173,3 +173,4 @@ class CfgInfo:
         self.path = config
         self.root_path = config.get("info", "rootDir")
         self.customer_path = dict(config.items('customer_folder'))
+        self.builds_path = dict(config.items('builds_path'))

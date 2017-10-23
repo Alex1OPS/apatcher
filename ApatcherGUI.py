@@ -33,6 +33,7 @@ class CfgInfo:
         self.projects_info = {pname.upper(): config.get("projects_path", pname) for pname in config["projects_path"]}
         self.author_name = config.get("info", "author")
         self.rootDir = config.get("info", "rootDir")
+        self.builds_info = dict(config["builds_path"])
 
 
 class SettingNamespace:
@@ -143,11 +144,13 @@ class PguiApatcherWindow(QMainWindow):
     def fill_def_doc_details(self):
         self.addDocsDetailsProjectEntity("Базовые", "base")
         self.addDocsDetailsProjectEntity("SDK", "sdk")
-        self.addDocsDetailsProjectEntity("Сборки", "builds")
 
         for x in self.getAvailableBillingOptions():
             self.addDocsDetailsProjectEntity("(opt)" + x.replace("option_", "").upper(), x)
         for x in self.getAvailableBillingProjects():
+            self.addDocsDetailsProjectEntity(x.upper(), x)
+        l_bld = self.getAvailableBuilds()
+        for x in l_bld:
             self.addDocsDetailsProjectEntity(x.upper(), x)
 
     def appendLog(self, text):
@@ -177,6 +180,9 @@ class PguiApatcherWindow(QMainWindow):
         for x in os.listdir(_tmp_p):
             if os.path.isdir(os.path.join(_tmp_p, x)): a.append(x)
         return a
+
+    def getAvailableBuilds(self):
+        return self.user_config.builds_info
 
     def changeActiveProject(self, proj_name):
         current_project_path = self.user_config.projects_info.get(proj_name)

@@ -11,6 +11,7 @@ from docx.shared import Cm
 from docxtpl import DocxTemplate
 
 import fwpt_apatcher.ApatcherUtils as autil
+import fwpt_apatcher.ApatcherGBuildDocs as agbdoc
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +169,7 @@ class DocEntity:
             raise TypeError("An invalid type for the ext attr of Doc entity object.")
         self.ext = ext
         for x in projects:
-            if not isinstance(x, ProjectCorpus):
+            if not isinstance(x, ProjectCorpus) and not isinstance(x, agbdoc.BuildProjectCorpus):
                 raise TypeError("An invalid type for the project corpus in document.")
         self.projects = projects
         self.customer_dir = customer_dir
@@ -254,6 +255,35 @@ class DocEntity:
         }
         return context
 
+    def generate_builds_changelist_context(self, docx_tpl):
+        document = docx_tpl.new_subdoc()
+
+        for proj_idx, xproj in enumerate(self.projects, start=1):
+            p_1 = document.add_paragraph()
+            r_1 = p_1.add_run()
+            r_1.add_break()
+            p_1.add_run("Таблица №{numtab}. Описание обновлений ({pr_name})".format(numtab=proj_idx,
+                                                                                          pr_name=xproj.project_name),
+                        style='TitleStyle2').bold = True
+            table = document.add_table(rows=1, cols=2)
+            table.style = 'Table Grid'
+            table.alignment = WD_TABLE_ALIGNMENT.CENTER
+            hdr_cells = table.rows[0].cells
+            hdr_cells[0].text = "№ сборки"
+            hdr_cells[1].text = "Краткое описание обновления"
+            hdr_cells[0].width = Cm(1)
+            hdr_cells[1].width = Cm(10)
+
+            for ypatch in xproj.patches:
+                row_cells = table.add_row().cells
+                row_cells[0].text = str(ypatch.version_num)
+                row_cells[1].text = ypatch.comment.replace("\n", " ").strip(",")
+
+        context = {
+            "project_changes": document
+        }
+        return context
+
     def generate(self):
         tpl_name = os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), "cfg", self.get_docx_tpl_name())
         if not os.path.isfile(tpl_name):
@@ -264,6 +294,8 @@ class DocEntity:
             context = self.generate_update_log_context(docx_tpl)
         elif self.ext == ExtNameDocTpl.CHANGELIST:
             context = self.generate_changelist_context(docx_tpl)
+        elif self.ext == ExtNameDocTpl.BUILDS_LIST:
+            context = self.generate_builds_changelist_context(docx_tpl)
         docx_tpl.render(context)
         self.path_to = "tmp\\{}".format(self.doc_name)
         docx_tpl.save(self.path_to)
@@ -278,7 +310,7 @@ class DocEntity:
 def get_project_ext_weight(project_ext):
     if project_ext == "sdk":
         s_w = 0
-    elif project_ext == "base":
+    elif project_ext.startswith("base"):
         s_w = 5
     elif project_ext.startswith("option_"):
         s_w = 10
@@ -289,6 +321,7 @@ def get_project_ext_weight(project_ext):
 
 def parse_namespace_pc(s, root_path):
     l_pcs = []
+    l_builds = []
     pre_pat_project_corpus_ = re.compile("([a-zA-Z_-]*?):([\d-]*?)[,\]]")
     for i in pre_pat_project_corpus_.findall(s):
         proj_ext_ = i[0]
@@ -296,15 +329,19 @@ def parse_namespace_pc(s, root_path):
 
         if proj_ext_ == "base":
             path_to = root_path
-        elif proj_ext_ == "builds":
+        elif proj_ext_ .startswith("build"):
             path_to = ""
         elif proj_ext_.startswith("option_") or proj_ext_ == "sdk":
             path_to = os.path.join(root_path, proj_ext_)
         else:
             path_to = os.path.join(root_path, "projects", proj_ext_)
 
-        _pc = ProjectCorpus(path_to=path_to)
+        if proj_ext_ .startswith("build"):
+            _pc = agbdoc.BuildProjectCorpus()
+        else:
+            _pc = ProjectCorpus(path_to=path_to)
         spp_ = i[1]
+
         try:
             pp = [int(spp_)] if len(spp_.split("-")) < 2 else list(
                 range(int(spp_.split("-")[0]), int(spp_.split("-")[1]) + 1))
@@ -312,6 +349,12 @@ def parse_namespace_pc(s, root_path):
             pp = []
         _pc.set_primary(project_name=proj_name_, project_ext=proj_ext_, weight=get_project_ext_weight(proj_ext_),
                         num_patches=pp)
-        if len(_pc.num_patches) > 0: l_pcs.append(_pc)
+
+        if len(_pc.num_patches) > 0 and not proj_ext_ .startswith("build"):
+            l_pcs.append(_pc)
+        elif len(_pc.num_patches) > 0 and proj_ext_ .startswith("build"):
+            l_builds.append(_pc)
+
         l_pcs.sort(key=operator.attrgetter("weight"))
-    return l_pcs
+        l_builds.sort(key=operator.attrgetter("weight"))
+    return l_pcs, l_builds
