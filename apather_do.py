@@ -7,7 +7,6 @@ import logging
 import os
 import sys
 import time
-import traceback
 
 from pymorphy2 import MorphAnalyzer
 
@@ -160,38 +159,43 @@ def generate_process_doc_patch(namespace):
 
     pr_docs = []
     if (namespace.only is False and namespace.docs is True and namespace.nomake is False) or namespace.only:
-        l_pc, l_builds = agd.parse_namespace_pc(namespace.anum, root_path=tcfg_arg.root_path)
-        for i in l_pc: i.prepare()
-        for i in l_pc: logging.debug(i)
-        for i in l_builds: logging.info(i)
-        for i in l_builds:
-            i.set_path_to_proj_svn(path_to=tcfg_arg.builds_path[i.project_ext])
-            i.prepare()
+        logging.info("Anum namespace = {}".format(namespace.anum))
+        try:
+            l_pc, l_builds = agd.parse_namespace_pc(namespace.anum, root_path=tcfg_arg.root_path)
+            for i in l_pc: i.prepare()
+            for i in l_pc: logging.debug(i)
+            for i in l_builds: logging.debug(i)
+            for i in l_builds:
+                i.set_path_to_proj_svn(path_to=tcfg_arg.builds_path[i.project_ext])
+                i.prepare()
+            return
 
-        if l_pc and len(l_pc) != 0:
-            doc_changelist = agd.DocEntity(doc_name="changelist.docx", ext=agd.ExtNameDocTpl.CHANGELIST, projects=l_pc,
-                                           customer_dir=namespace.dir, print_author=tcfg_arg.prepauthor,
-                                           date_str=dt_str_make)
-            doc_update_log = agd.DocEntity(doc_name="update_log.docx", ext=agd.ExtNameDocTpl.UPDATE_LOG, projects=l_pc,
-                                           customer_dir=namespace.dir, print_author=tcfg_arg.prepauthor,
-                                           date_str=dt_str_make)
-            doc_changelist.generate()
-            doc_update_log.generate()
-            pr_docs.append(doc_changelist.get_doc_path())
-            pr_docs.append(doc_update_log.get_doc_path())
+            if l_pc and len(l_pc) != 0:
+                doc_changelist = agd.DocEntity(doc_name="changelist.docx", ext=agd.ExtNameDocTpl.CHANGELIST,
+                                               projects=l_pc,
+                                               customer_dir=namespace.dir, print_author=tcfg_arg.prepauthor,
+                                               date_str=dt_str_make)
+                doc_update_log = agd.DocEntity(doc_name="update_log.docx", ext=agd.ExtNameDocTpl.UPDATE_LOG,
+                                               projects=l_pc,
+                                               customer_dir=namespace.dir, print_author=tcfg_arg.prepauthor,
+                                               date_str=dt_str_make)
+                doc_changelist.generate()
+                doc_update_log.generate()
+                pr_docs.append(doc_changelist.get_doc_path())
+                pr_docs.append(doc_update_log.get_doc_path())
 
-        if l_builds and len(l_builds) != 0:
-            doc_builds_list = agd.DocEntity(doc_name="builds_changelist.docx", ext=agd.ExtNameDocTpl.BUILDS_LIST,
-                                            projects=l_builds,
-                                            customer_dir=namespace.dir, print_author=tcfg_arg.prepauthor,
-                                            date_str=dt_str_make)
-            try:
+            if l_builds and len(l_builds) != 0:
+                doc_builds_list = agd.DocEntity(doc_name="builds_changelist.docx", ext=agd.ExtNameDocTpl.BUILDS_LIST,
+                                                projects=l_builds,
+                                                customer_dir=namespace.dir, print_author=tcfg_arg.prepauthor,
+                                                date_str=dt_str_make)
                 doc_builds_list.generate()
-            except Exception as ex:
-                logging.error(ex)
-            pr_docs.append(doc_builds_list.get_doc_path())
+                pr_docs.append(doc_builds_list.get_doc_path())
 
-        for x in l_pc: transfer_objects[x.project_ext] = x.get_objects_for_transfer()
+            for x in l_pc: transfer_objects[x.project_ext] = x.get_objects_for_transfer()
+        except Exception:
+            logging.exception("Generate docs error:")
+            exit(0)
 
     if namespace.customer and len(pr_docs) != 0:
         autil.prepare_transferring_customer(lconf=tcfg_arg,

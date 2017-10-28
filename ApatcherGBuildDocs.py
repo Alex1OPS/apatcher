@@ -18,20 +18,24 @@ class LocalDBCache:
     path_to_tmp = None
     db_inst = None
     connection_thread = None
+    project_ext = None
 
-    def __init__(self, path_build, path_to=PATH_LOCAL_DB_CACHE):
+    def __init__(self, path_build, project_ext, path_to=PATH_LOCAL_DB_CACHE):
         ldir = os.path.dirname(os.path.realpath(sys.argv[0]))
         self.path_build = path_build
+        self.project_ext = project_ext
         self.path_to = os.path.join(ldir, path_to)
         self.path_to_tmp = os.path.join(ldir, PATH_TMP_PREP_CACHE)
-        self.init_db()
         if not os.path.isfile(self.path_to):
+            self.init_db()
             self.get_svn_log()
         else:
+            self.init_db()
             os.remove(self.path_to_tmp)
             last_rev = self.get_last_cached_revision()
+            if last_rev is not None: last_rev += 1
             try:
-                self.get_svn_log(begin_rev=last_rev + 1)
+                self.get_svn_log(begin_rev=last_rev)
             except Exception as ex:
                 logging.error(ex)
         self.init_parse_tmp_cache()
@@ -51,7 +55,8 @@ class LocalDBCache:
             db_cur = conn.cursor()
             db_cur.execute('''CREATE TABLE IF NOT EXISTS svn_build_revs
                                   (revision INTEGER PRIMARY KEY, comment TEXT, author TEXT, 
-                                   dt_event DATETIME DEFAULT current_timestamp, n_version_build INTEGER)''')
+                                   dt_event DATETIME DEFAULT current_timestamp, n_version_build INTEGER,
+                                   project_ext TEXT)''')
             conn.commit()
             self.connection_thread = conn
         except Exception as ex:
@@ -64,8 +69,8 @@ class LocalDBCache:
             content = f.read()
         rr = content.split("------------------------------------------------------------------------\n")
         rr = filter(lambda h: len(h) != 0, rr)
-        m = re.compile("Auto build v. 3.0 - 8.RC1.(\d*?) V(\d)")
         prepared_list = []
+        # TODO добавить проверку путей при сохранении ревизий в ветках
         try:
             for i in rr:
                 x = i.split(" | ")
@@ -73,24 +78,23 @@ class LocalDBCache:
                 author = x[1]
                 dt = datetime.datetime.strptime(x[2][:18], "%Y-%m-%d %H:%M:%S")
                 comment = x[3].split("\n\n")[1]
-                p = m.findall(comment)
                 n_version_num = None
-                if p and len(p) != 0 and len(p[0]) != 0:
-                    n_version_num = p[0][0]
-                prepared_list.append((rev, comment, author, dt, n_version_num))
+                if "Auto build v." in comment:
+                    n_version_num = comment.split(" ")[-2].split(".")[-1].split("-")[-1]
+                prepared_list.append((rev, comment, author, dt, n_version_num, self.project_ext))
         except Exception as ex:
             logging.error(ex)
 
         try:
             for item in prepared_list:
-                db_cur.execute('INSERT INTO svn_build_revs VALUES (?,?,?,?,?)', item)
+                db_cur.execute('INSERT INTO svn_build_revs VALUES (?,?,?,?,?,?)', item)
         except Exception as ex:
             logging.error(ex)
         conn.commit()
 
     def get_last_cached_revision(self):
         conn = self.connection_thread
-        cursor = conn.execute("SELECT max(revision) FROM svn_build_revs")
+        cursor = conn.execute("SELECT max(revision) FROM svn_build_revs WHERE project_ext = ?", (self.project_ext, ))
         rows = cursor.fetchall()
         return rows[0][0] if rows and len(rows) != 0 and len(rows[0]) != 0 else None
 
@@ -143,7 +147,7 @@ class BuildProjectCorpus:
         self.path_to = path_to
 
     def prepare(self):
-        ldbc = LocalDBCache(self.path_to)
+        ldbc = LocalDBCache(path_build=self.path_to, project_ext=self.project_ext)
         conn = ldbc.connection_thread
         query_ = """SELECT tb.n_version_build, 
 	  group_concat(tb.comment) AS comment
@@ -160,13 +164,14 @@ class BuildProjectCorpus:
                   a.n_version_build
                END) AS n_version_build
           FROM svn_build_revs a
-         WHERE a.revision BETWEEN (SELECT revision FROM svn_build_revs
+         WHERE a.project_ext = ? and 
+              a.revision BETWEEN (SELECT revision FROM svn_build_revs
                                     WHERE n_version_build = ?) 
 				   AND (SELECT revision FROM svn_build_revs
                  WHERE n_version_build = ?)
          ORDER BY a.revision ASC) tb
 GROUP BY tb.n_version_build"""
-        cursor = conn.execute(query_, (min(self.num_patches), max(self.num_patches),))
+        cursor = conn.execute(query_, (self.project_ext, min(self.num_patches), max(self.num_patches),))
         rows = cursor.fetchall()
         for i in rows:
             _be = BuildEntity(version_num=i[0], comment=i[1])

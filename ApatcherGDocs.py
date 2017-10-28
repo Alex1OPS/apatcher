@@ -322,7 +322,7 @@ def get_project_ext_weight(project_ext):
 def parse_namespace_pc(s, root_path):
     l_pcs = []
     l_builds = []
-    pre_pat_project_corpus_ = re.compile("([a-zA-Z_-]*?):([\d-]*?)[,\]]")
+    pre_pat_project_corpus_ = re.compile("([a-zA-Z0-9\._-]*?):([\d-]*?)[,\]]")
     for i in pre_pat_project_corpus_.findall(s):
         proj_ext_ = i[0]
         proj_name_ = proj_ext_.replace("option_", "").replace("_", " ").upper() if proj_ext_ != "base" else "Базовые"
@@ -355,6 +355,6 @@ def parse_namespace_pc(s, root_path):
         elif len(_pc.num_patches) > 0 and proj_ext_ .startswith("build"):
             l_builds.append(_pc)
 
-        l_pcs.sort(key=operator.attrgetter("weight"))
-        l_builds.sort(key=operator.attrgetter("weight"))
+    l_pcs.sort(key=operator.attrgetter("weight"))
+    l_builds.sort(key=operator.attrgetter("weight"))
     return l_pcs, l_builds
