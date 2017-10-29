@@ -1,3 +1,4 @@
+import collections
 import configparser as cfg
 import datetime as dt
 import logging
@@ -13,6 +14,7 @@ import fwpt_apatcher.ApatcherClass as ac
 import fwpt_apatcher.apather_do as ado
 
 logger = logging.getLogger(__name__)
+EXCLUDE_EXT_FILES = ["svn", ".gradle", "test", "copyfile"]
 
 
 class CfgInfo:
@@ -182,7 +184,7 @@ class PguiApatcherWindow(QMainWindow):
         return a
 
     def getAvailableBuilds(self):
-        return self.user_config.builds_info
+        return collections.OrderedDict(self.user_config.builds_info)
 
     def changeActiveProject(self, proj_name):
         current_project_path = self.user_config.projects_info.get(proj_name)

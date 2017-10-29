@@ -12,10 +12,11 @@ from pymorphy2 import MorphAnalyzer
 
 import fwpt_apatcher.ApatcherClass as ac
 import fwpt_apatcher.ApatcherGDocs as agd
+import fwpt_apatcher.ApatcherGBuildDocs as agbd
 import fwpt_apatcher.ApatcherMenu as amenu
 import fwpt_apatcher.ApatcherUtils as autil
 
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 debug_mode = False
 
 logging.basicConfig(filename="back/ct_main.log",
@@ -166,9 +167,11 @@ def generate_process_doc_patch(namespace):
             for i in l_pc: logging.debug(i)
             for i in l_builds: logging.debug(i)
             for i in l_builds:
-                i.set_path_to_proj_svn(path_to=tcfg_arg.builds_path[i.project_ext])
-                i.prepare()
-            return
+                _path_to = tcfg_arg.builds_path[i.project_ext]
+                i.set_path_to_proj_svn(path_to=_path_to)
+                i.prepare(tcfg_arg.builds_path)
+
+            agbd.process_oss_build(l_builds)
 
             if l_pc and len(l_pc) != 0:
                 doc_changelist = agd.DocEntity(doc_name="changelist.docx", ext=agd.ExtNameDocTpl.CHANGELIST,

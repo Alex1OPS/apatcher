@@ -258,7 +258,8 @@ class DocEntity:
     def generate_builds_changelist_context(self, docx_tpl):
         document = docx_tpl.new_subdoc()
 
-        for proj_idx, xproj in enumerate(self.projects, start=1):
+        dsub_builds = [x for x in self.projects if x.patches and len(x.patches) != 0]
+        for proj_idx, xproj in enumerate(dsub_builds, start=1):
             p_1 = document.add_paragraph()
             r_1 = p_1.add_run()
             r_1.add_break()

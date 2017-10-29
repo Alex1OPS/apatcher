@@ -160,3 +160,8 @@ def prepare_transferring_customer(lconf, transfer_objects, ldir, docs):
     logger.info("Copying patch documents ...")
     copy_patches_to_dir(os.path.join(target_dir, lconf.customer_path["docs"]), docs)
     logger.info("Customer directory {} was successfully prepared".format(target_dir))
+
+
+# получение пути до сборки с обработкой OSS сборок (AMS, FUSION, TI, SP, ...)
+def get_path_to_build_proj(proj_ext, build_cfg):
+    return build_cfg[proj_ext]
