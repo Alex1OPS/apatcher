@@ -56,13 +56,14 @@ class SettingNamespace:
         self.fwopt = None
         self.commit = False
         self.dgen_details = None
+        self.writer = None
 
     # печать состава namespace пользователя
     def print_namespace_composition(self):
         return (("User namespace consists of:\n" +
                  "manual = {manual}\nproject = {project}\ntext = {text}\ndocs = {docs}\nonly = {only}\n" +
                  "dir = {dir}\ncustomer = {customer}\nanum = {anum}\nbefore_scripts = {befscripts}\n" +
-                 "patch_files = {patchfiles}\nnomake = {nomake}\nmake = {make}\ndoc_details={dgen}").format(
+                 "patch_files = {patchfiles}\nnomake = {nomake}\nmake = {make}\ndoc_details={dgen}\nwriter={writer}").format(
             manual=self.manual,
             project=self.project,
             text=self.text,
@@ -74,7 +75,8 @@ class SettingNamespace:
             patchfiles=self.patch_files,
             nomake=self.nomake,
             make=self.make,
-            dgen=self.dgen_details)
+            dgen=self.dgen_details,
+            writer=self.writer)
         )
 
 
@@ -256,6 +258,7 @@ class PguiApatcherWindow(QMainWindow):
         self.lineDirToPass.setReadOnly(True)
         self.checkBoxWithFiles.setChecked(False)
         self.checkBoxPrepareCustomer.setChecked(False)
+        self.checkBoxOnlyCsv.setChecked(False)
         self.textComment.clear()
         self.textBeforeFiles.clear()
         self.setDefaultEnv()
@@ -302,6 +305,7 @@ class PguiApatcherWindow(QMainWindow):
         user_space_set.patch_files = self.get_tab_files_content()
         user_space_set.fwopt = None
         user_space_set.dgen_details = dgen_details_
+        user_space_set.writer = "csv" if self.checkBoxOnlyCsv.isChecked() else "docx"
 
         logging.info("User namespace:{}".format(user_space_set.print_namespace_composition()))
 

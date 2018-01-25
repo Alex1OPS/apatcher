@@ -10,8 +10,8 @@ from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.shared import Cm
 from docxtpl import DocxTemplate
 
-import fwpt_apatcher.ApatcherUtils as autil
 import fwpt_apatcher.ApatcherGBuildDocs as agbdoc
+import fwpt_apatcher.ApatcherUtils as autil
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +25,11 @@ class ExtNameDocTpl(Enum):
     CHANGELIST = "changelist"
     UPDATE_LOG = "updatelog"
     BUILDS_LIST = "buildlist"
+
+
+class AvailableWriters(Enum):
+    DOCX = "docx"
+    CSV = "csv"
 
 
 class ProjectPatchEntity:
@@ -162,8 +167,9 @@ class DocEntity:
     print_author = None
     projects = []
     path_to = None
+    writer = None
 
-    def __init__(self, doc_name, ext, projects, customer_dir, print_author, date_str):
+    def __init__(self, doc_name, ext, projects, customer_dir, print_author, date_str, writer=AvailableWriters.DOCX):
         self.doc_name = doc_name
         if not isinstance(ext, ExtNameDocTpl):
             raise TypeError("An invalid type for the ext attr of Doc entity object.")
@@ -175,6 +181,9 @@ class DocEntity:
         self.customer_dir = customer_dir
         self.print_author = print_author
         self.date_str = date_str
+        if not isinstance(writer, AvailableWriters):
+            raise TypeError("An invalid writer for docs.")
+        self.writer = writer
 
     def get_docx_tpl_name(self):
         if self.ext == ExtNameDocTpl.CHANGELIST:
@@ -264,7 +273,7 @@ class DocEntity:
             r_1 = p_1.add_run()
             r_1.add_break()
             p_1.add_run("Таблица №{numtab}. Описание обновлений ({pr_name})".format(numtab=proj_idx,
-                                                                                          pr_name=xproj.project_name),
+                                                                                    pr_name=xproj.project_name),
                         style='TitleStyle2').bold = True
             table = document.add_table(rows=1, cols=2)
             table.style = 'Table Grid'
@@ -285,21 +294,41 @@ class DocEntity:
         }
         return context
 
+    # TODO правильно будет создать базовый класс в пакете writers, перенести туда реализацию формирования для docx,
+    # TODO и просто в зависимости от указанной опции брать реализацию того или иного writer'а
+    # TODO может когда-нибудь будет время на это (:
     def generate(self):
-        tpl_name = os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), "cfg", self.get_docx_tpl_name())
-        if not os.path.isfile(tpl_name):
-            logging.error("{} error: Path {} not exists".format(self, tpl_name))
-        docx_tpl = DocxTemplate(tpl_name)
-        context = {}
-        if self.ext == ExtNameDocTpl.UPDATE_LOG:
-            context = self.generate_update_log_context(docx_tpl)
-        elif self.ext == ExtNameDocTpl.CHANGELIST:
-            context = self.generate_changelist_context(docx_tpl)
-        elif self.ext == ExtNameDocTpl.BUILDS_LIST:
-            context = self.generate_builds_changelist_context(docx_tpl)
-        docx_tpl.render(context)
-        self.path_to = "tmp\\{}".format(self.doc_name)
-        docx_tpl.save(self.path_to)
+        if self.writer == AvailableWriters.DOCX:
+            tpl_name = os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), "cfg", self.get_docx_tpl_name())
+            if not os.path.isfile(tpl_name):
+                logging.error("{} error: Path {} not exists".format(self, tpl_name))
+            docx_tpl = DocxTemplate(tpl_name)
+            context = {}
+            if self.ext == ExtNameDocTpl.UPDATE_LOG:
+                context = self.generate_update_log_context(docx_tpl)
+            elif self.ext == ExtNameDocTpl.CHANGELIST:
+                context = self.generate_changelist_context(docx_tpl)
+            elif self.ext == ExtNameDocTpl.BUILDS_LIST:
+                context = self.generate_builds_changelist_context(docx_tpl)
+            docx_tpl.render(context)
+            self.path_to = "tmp\\{}".format(self.doc_name)
+            docx_tpl.save(self.path_to)
+
+        elif self.writer == AvailableWriters.CSV:
+            import fwpt_apatcher.writers.csvwriter as csw
+            columns = []
+            context = {}
+            if self.ext == ExtNameDocTpl.UPDATE_LOG:
+                columns, context = csw.generate_update_log_context(self)
+            elif self.ext == ExtNameDocTpl.CHANGELIST:
+                columns, context = csw.generate_changelist_context(self)
+            elif self.ext == ExtNameDocTpl.BUILDS_LIST:
+                columns, context = csw.generate_builds_changelist_context(self)
+            self.path_to = "tmp\\{}".format(self.doc_name)
+            csw.render_save(columns, context, self.path_to)
+
+        else:
+            raise NotImplementedError("The specified writer is not implemented!")
 
     def get_doc_path(self):
         return self.path_to
@@ -330,14 +359,14 @@ def parse_namespace_pc(s, root_path):
 
         if proj_ext_ == "base":
             path_to = root_path
-        elif proj_ext_ .startswith("build"):
+        elif proj_ext_.startswith("build"):
             path_to = ""
         elif proj_ext_.startswith("option_") or proj_ext_ == "sdk":
             path_to = os.path.join(root_path, proj_ext_)
         else:
             path_to = os.path.join(root_path, "projects", proj_ext_)
 
-        if proj_ext_ .startswith("build"):
+        if proj_ext_.startswith("build"):
             _pc = agbdoc.BuildProjectCorpus()
         else:
             _pc = ProjectCorpus(path_to=path_to)
@@ -351,9 +380,9 @@ def parse_namespace_pc(s, root_path):
         _pc.set_primary(project_name=proj_name_, project_ext=proj_ext_, weight=get_project_ext_weight(proj_ext_),
                         num_patches=pp)
 
-        if len(_pc.num_patches) > 0 and not proj_ext_ .startswith("build"):
+        if len(_pc.num_patches) > 0 and not proj_ext_.startswith("build"):
             l_pcs.append(_pc)
-        elif len(_pc.num_patches) > 0 and proj_ext_ .startswith("build"):
+        elif len(_pc.num_patches) > 0 and proj_ext_.startswith("build"):
             l_builds.append(_pc)
 
     l_pcs.sort(key=operator.attrgetter("weight"))

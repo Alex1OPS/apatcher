@@ -55,6 +55,8 @@ def create_parser():
                               help="Только создание патча")
     parent_group.add_argument("--customer", action='store_true', default=False,
                               help="Подготовить к передаче заказчику")
+    parent_group.add_argument("-w", "--writer", default="docx", help="Writer для формирования документации",
+                              choices=['docx', 'csv'])
     parent_group.add_argument("-h", "--help", action="help", help="Справка")
     parent_group.add_argument("--version",
                               action="version",
@@ -174,24 +176,27 @@ def generate_process_doc_patch(namespace):
             agbd.process_oss_build(l_builds)
 
             if l_pc and len(l_pc) != 0:
-                doc_changelist = agd.DocEntity(doc_name="changelist.docx", ext=agd.ExtNameDocTpl.CHANGELIST,
+                doc_changelist = agd.DocEntity(doc_name="changelist.{}".format(namespace.writer),
+                                               ext=agd.ExtNameDocTpl.CHANGELIST,
                                                projects=l_pc,
                                                customer_dir=namespace.dir, print_author=tcfg_arg.prepauthor,
-                                               date_str=dt_str_make)
-                doc_update_log = agd.DocEntity(doc_name="update_log.docx", ext=agd.ExtNameDocTpl.UPDATE_LOG,
+                                               date_str=dt_str_make, writer=agd.AvailableWriters(namespace.writer))
+                doc_update_log = agd.DocEntity(doc_name="update_log.{}".format(namespace.writer),
+                                               ext=agd.ExtNameDocTpl.UPDATE_LOG,
                                                projects=l_pc,
                                                customer_dir=namespace.dir, print_author=tcfg_arg.prepauthor,
-                                               date_str=dt_str_make)
+                                               date_str=dt_str_make, writer=agd.AvailableWriters(namespace.writer))
                 doc_changelist.generate()
                 doc_update_log.generate()
                 pr_docs.append(doc_changelist.get_doc_path())
                 pr_docs.append(doc_update_log.get_doc_path())
 
             if l_builds and len(l_builds) != 0:
-                doc_builds_list = agd.DocEntity(doc_name="builds_changelist.docx", ext=agd.ExtNameDocTpl.BUILDS_LIST,
+                doc_builds_list = agd.DocEntity(doc_name="builds_changelist.{}".format(namespace.writer),
+                                                ext=agd.ExtNameDocTpl.BUILDS_LIST,
                                                 projects=l_builds,
                                                 customer_dir=namespace.dir, print_author=tcfg_arg.prepauthor,
-                                                date_str=dt_str_make)
+                                                date_str=dt_str_make, writer=agd.AvailableWriters(namespace.writer))
                 doc_builds_list.generate()
                 pr_docs.append(doc_builds_list.get_doc_path())
 
